@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { asset } from '../asset';
 import { colors } from '../brand';
 import { config, tickerItems } from '../config';
 import type { GameDefinition } from '../games/types';
+import { fallbackEntryAction } from '../state/fallback';
 import { appStore, useApp } from '../state/store';
 import { moveFocus } from '../ui/focus';
 import { inputBus } from '../ui/inputBus';
@@ -43,6 +44,21 @@ export function CssFallback({ games }: { games: GameDefinition[] }) {
   const focusIndex = useApp((s) => s.focusIndex);
   const [note, setNote] = useState(false);
 
+  // Layout effects (not passive ones) so both run synchronously in the commit that makes
+  // the fallback visible — a passive useEffect is deferred and can miss a keypress that
+  // lands right after this mounts (see Board.tsx for the same reasoning).
+  //
+  // The fallback has no boot/attract/game UI of its own, so force the store onto the board
+  // the moment it mounts. Covers starting directly in Safe mode (Boot.tsx never mounts,
+  // since it lives inside the Canvas the fallback replaces) and staff cycling into Safe —
+  // or a lost WebGL context — mid-session.
+  useLayoutEffect(() => {
+    const s = appStore.getState();
+    const action = fallbackEntryAction(s.screen);
+    if (action === 'toBoard') s.toBoard();
+    else if (action === 'exitGame') s.exitGame();
+  }, []);
+
   const select = (i: number) => {
     appStore.getState().setFocus(i);
     if (games[i].status !== 'playable') return;
@@ -50,7 +66,7 @@ export function CssFallback({ games }: { games: GameDefinition[] }) {
     setTimeout(() => setNote(false), 3000);
   };
 
-  useEffect(() => inputBus.subscribe((a) => {
+  useLayoutEffect(() => inputBus.subscribe((a) => {
     const s = appStore.getState();
     if (a === 'select') select(s.focusIndex);
     else if (a !== 'back') s.setFocus(moveFocus(s.focusIndex, a, 3, games.length));

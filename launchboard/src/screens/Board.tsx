@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Text } from '@react-three/drei';
 import { colors, fonts } from '../brand';
 import { config, tickerItems } from '../config';
@@ -47,7 +47,10 @@ export function Board({ games }: { games: GameDefinition[] }) {
   const selectRef = useRef(select);
   useEffect(() => { selectRef.current = select; }, [select]);
 
-  useEffect(() => inputBus.subscribe((action) => {
+  // A layout effect (not a passive one) so the subscription is live in the same commit
+  // that makes the board visible — a passive useEffect is deferred and can miss a keypress
+  // that lands in the gap right after `screen` flips to 'board'.
+  useLayoutEffect(() => inputBus.subscribe((action) => {
     const s = appStore.getState();
     if (s.screen !== 'board') return;
     if (action === 'select') selectRef.current(s.focusIndex);

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { effectiveConfig, config } from './config';
 import { Gallery } from './dev/Gallery';
@@ -38,11 +38,11 @@ function Monitor({ children }: { children: ReactNode }) {
 
 export default function App() {
   useGlobalInput();
-  useIdle(cfg);
   useKiosk(!isE2e);
   const quality = useApp((s) => s.quality);
   const contextLost = useApp((s) => s.contextLost);
   const fallback = !hasWebGL2 || quality === 'safe';
+  useIdle(cfg, fallback || contextLost);
 
   return (
     <>
@@ -60,7 +60,11 @@ export default function App() {
             {!contextLost && (params.has('gallery') ? <Gallery /> : (
               <>
                 <StudioRig />
-                <ScreenRouter games={games} gameHost={<GameHost games={games} />} />
+                {/* A suspended <Text> (e.g. a cold font load) only unmounts this boundary,
+                    never the whole scene, so the TubeRenderer frame loop keeps running. */}
+                <Suspense fallback={null}>
+                  <ScreenRouter games={games} gameHost={<GameHost games={games} />} />
+                </Suspense>
               </>
             ))}
           </Monitor>
