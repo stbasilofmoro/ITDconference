@@ -1,39 +1,17 @@
-import { useRef, useState, type ReactNode } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import type { Mesh } from 'three';
-import { TubeRenderer } from './tube/TubeRenderer';
+import type { ReactNode } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
+import { Gallery } from './dev/Gallery';
+import { installE2eHooks } from './e2eHooks';
+import { buildRegistry } from './games/registry';
+import { StudioRig } from './illustrations/StudioRig';
+import { ScreenRouter } from './screens/ScreenRouter';
 import { Bezel } from './tube/Bezel';
 import { computeLayout } from './tube/geometry';
-import { installE2eHooks } from './e2eHooks';
-import { colors } from './brand';
-import { Gallery } from './dev/Gallery';
+import { TubeRenderer } from './tube/TubeRenderer';
 
-let clicks = 0;
-installE2eHooks({ clicks: () => clicks });
-
-function SpinningTie() {
-  const ref = useRef<Mesh>(null!);
-  const [hot, setHot] = useState(false);
-  useFrame((_, dt) => { ref.current.rotation.y += dt; });
-  return (
-    <mesh ref={ref} position={[-55, 270, 0]} rotation={[0.6, 0, 0]}
-      onClick={() => { clicks += 1; setHot((h) => !h); }}>
-      <boxGeometry args={[300, 60, 80]} />
-      <meshStandardMaterial color={hot ? colors.kilnPink : colors.tieOrange} roughness={0.8} />
-    </mesh>
-  );
-}
-
-// Small camera-facing target near the top-left of the content. Its 18px half-size is smaller than the
-// ~34 content px offset between curved and flat (no-barrel) pointer mapping there, so only curved mapping hits it.
-function CornerTarget() {
-  return (
-    <mesh position={[-760, 400, 0]} onClick={() => { clicks += 1; }}>
-      <boxGeometry args={[36, 36, 36]} />
-      <meshStandardMaterial color={colors.kilnPink} roughness={0.8} />
-    </mesh>
-  );
-}
+const params = new URLSearchParams(window.location.search);
+const games = buildRegistry({ includeTestPattern: params.has('e2e') });
+installE2eHooks();
 
 function Monitor({ children }: { children: ReactNode }) {
   const size = useThree((s) => s.size);
@@ -46,14 +24,10 @@ export default function App() {
     <Canvas orthographic flat dpr={[1, 2]} camera={{ position: [0, 0, 1000], zoom: 1, near: 0.1, far: 5000 }}
       gl={{ antialias: true, powerPreference: 'high-performance' }}>
       <Monitor>
-        {new URLSearchParams(location.search).has('gallery') ? (
-          <Gallery />
-        ) : (
+        {params.has('gallery') ? <Gallery /> : (
           <>
-            <ambientLight intensity={0.6} />
-            <directionalLight position={[-400, 800, 600]} intensity={1.6} />
-            <SpinningTie />
-            <CornerTarget />
+            <StudioRig />
+            <ScreenRouter games={games} />
           </>
         )}
       </Monitor>
