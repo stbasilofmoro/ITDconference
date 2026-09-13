@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-5 -5 900 256" role="img" aria-label="International Tie Disposal">
+  <g fill="none" stroke="#1C1B1F" stroke-width="10" stroke-linecap="butt" stroke-linejoin="miter">
+    <path d="M5 78V246M25 78V246M45 78V246"/>
+    <path d="M0 5H225A57 57 0 0 1 282 62V184A57 57 0 0 1 225 241H164V78"/>
+    <path d="M0 25H225A38 38 0 0 1 263 63V183A38 38 0 0 1 225 221H183V78"/>
+    <path d="M0 45H84V246"/>
+    <path d="M104 25V246"/>
+    <path d="M124 246V45H225A18 18 0 0 1 243 63V183A18 18 0 0 1 225 201H203V78"/>
+  </g>
+  <g fill="#1C1B1F" font-family="'DINPro Medium','DINPro','Barlow',sans-serif" font-weight="500" font-size="92">
+    <text x="360" y="110">International</text>
+    <text x="360" y="222">Tie Disposal</text>
+  </g>
+</svg>
