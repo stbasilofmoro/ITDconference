@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Text } from '@react-three/drei';
 import { colors, fonts } from '../brand';
 import { config, tickerItems } from '../config';
@@ -19,11 +19,17 @@ export function Board({ games }: { games: GameDefinition[] }) {
   const focusIndex = useApp((s) => s.focusIndex);
   const [launching, setLaunching] = useState<number | null>(null);
   const [shakes, setShakes] = useState<Record<number, number>>({});
-  const launchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const launchingRef = useRef<number | null>(null);
 
-  useEffect(() => () => clearTimeout(launchTimer.current), []);
-
+  // Deliberately no unmount cleanup for this timer: `appStore.launch()` already guards on
+  // `screen === 'board'`, so a stale timer firing after Board goes away is a no-op, and
+  // React 19 doesn't warn on a state update from an unmounted component either. (A bare
+  // `useEffect(() => () => clearTimeout(timer), [])` here would be a real bug now that
+  // inputBus can deliver a buffered action — and so call select(), which schedules this
+  // timer — during React StrictMode's synthetic double-invoke of effects: that pass mounts
+  // every effect before cleaning any of them up, so an unrelated "cleanup on unmount"
+  // effect's simulated cleanup would read the timer ref *after* it was set and cancel a
+  // perfectly live launch.)
   const select = useCallback((i: number) => {
     const game = games[i];
     appStore.getState().setFocus(i);
@@ -35,7 +41,7 @@ export function Board({ games }: { games: GameDefinition[] }) {
     launchingRef.current = i;
     setLaunching(i);
     tubeBus.pulse('channel');
-    launchTimer.current = setTimeout(() => {
+    setTimeout(() => {
       appStore.getState().launch(game.id);
       launchingRef.current = null;
       setLaunching(null);
@@ -47,10 +53,11 @@ export function Board({ games }: { games: GameDefinition[] }) {
   const selectRef = useRef(select);
   useEffect(() => { selectRef.current = select; }, [select]);
 
-  // A layout effect (not a passive one) so the subscription is live in the same commit
-  // that makes the board visible — a passive useEffect is deferred and can miss a keypress
-  // that lands in the gap right after `screen` flips to 'board'.
-  useLayoutEffect(() => inputBus.subscribe((action) => {
+  // A plain (passive) effect is fine here: inputBus buffers the most recent action for
+  // PENDING_TTL_MS when it has no subscriber, so a keypress that lands in the gap before
+  // this subscription commits is still delivered once it does — no matter how that gap
+  // is caused (a slow frame, StrictMode's effect double-invoke, or anything else).
+  useEffect(() => inputBus.subscribe((action) => {
     const s = appStore.getState();
     if (s.screen !== 'board') return;
     if (action === 'select') selectRef.current(s.focusIndex);

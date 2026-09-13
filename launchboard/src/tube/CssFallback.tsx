@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { asset } from '../asset';
 import { colors } from '../brand';
 import { config, tickerItems } from '../config';
@@ -44,9 +44,11 @@ export function CssFallback({ games }: { games: GameDefinition[] }) {
   const focusIndex = useApp((s) => s.focusIndex);
   const [note, setNote] = useState(false);
 
-  // Layout effects (not passive ones) so both run synchronously in the commit that makes
-  // the fallback visible — a passive useEffect is deferred and can miss a keypress that
-  // lands right after this mounts (see Board.tsx for the same reasoning).
+  // A layout effect (not a passive one) so this runs synchronously in the commit that
+  // makes the fallback visible. This one must stay synchronous: it corrects `screen` in
+  // the store directly (not via inputBus), and useGlobalInput's wakeOrRoute branches on
+  // `screen` before anything ever reaches inputBus — so a stale 'boot' here would swallow
+  // input outright rather than something inputBus's pending-action buffer could recover.
   //
   // The fallback has no boot/attract/game UI of its own, so force the store onto the board
   // the moment it mounts. Covers starting directly in Safe mode (Boot.tsx never mounts,
@@ -66,7 +68,9 @@ export function CssFallback({ games }: { games: GameDefinition[] }) {
     setTimeout(() => setNote(false), 3000);
   };
 
-  useLayoutEffect(() => inputBus.subscribe((a) => {
+  // A plain (passive) effect: inputBus buffers the most recent action for PENDING_TTL_MS
+  // when it has no subscriber yet, so this doesn't need to race to subscribe synchronously.
+  useEffect(() => inputBus.subscribe((a) => {
     const s = appStore.getState();
     if (a === 'select') select(s.focusIndex);
     else if (a !== 'back') s.setFocus(moveFocus(s.focusIndex, a, 3, games.length));
