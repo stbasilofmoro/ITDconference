@@ -1,7 +1,9 @@
-import { useRef, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useRef, useState, type ReactNode } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import type { Mesh } from 'three';
 import { TubeRenderer } from './tube/TubeRenderer';
+import { Bezel } from './tube/Bezel';
+import { computeLayout } from './tube/geometry';
 import { installE2eHooks } from './e2eHooks';
 import { colors } from './brand';
 
@@ -32,16 +34,22 @@ function CornerTarget() {
   );
 }
 
+function Monitor({ children }: { children: ReactNode }) {
+  const size = useThree((s) => s.size);
+  const layout = computeLayout(size.width, size.height);
+  return <TubeRenderer bezel={<Bezel layout={layout} viewW={size.width} viewH={size.height} />}>{children}</TubeRenderer>;
+}
+
 export default function App() {
   return (
     <Canvas orthographic flat dpr={[1, 2]} camera={{ position: [0, 0, 1000], zoom: 1, near: 0.1, far: 5000 }}
       gl={{ antialias: true, powerPreference: 'high-performance' }}>
-      <TubeRenderer>
+      <Monitor>
         <ambientLight intensity={0.6} />
         <directionalLight position={[-400, 800, 600]} intensity={1.6} />
         <SpinningTie />
         <CornerTarget />
-      </TubeRenderer>
+      </Monitor>
     </Canvas>
   );
 }

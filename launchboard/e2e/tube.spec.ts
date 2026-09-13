@@ -17,6 +17,12 @@ test('tube renders and maps pointer hits through the curved glass', async ({ pag
   await page.waitForTimeout(1500);
   await page.screenshot({ path: 'test-results/tube-check.png' });
 
+  await page.setViewportSize({ width: 1280, height: 1024 });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: 'test-results/tube-bezel-4x3.png' });
+  await page.setViewportSize({ width: 1920, height: 1080 });
+  await page.waitForTimeout(500);
+
   const target = await page.evaluate(() => window.__launchboard!.contentToScreen(-55, 270));
   await page.mouse.click(target.px, target.py);
   await expect.poll(() => page.evaluate(() => window.__launchboard!.clicks!())).toBe(1);
