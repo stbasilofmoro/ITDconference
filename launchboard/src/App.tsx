@@ -1,17 +1,33 @@
 import type { ReactNode } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
+import { effectiveConfig, config } from './config';
 import { Gallery } from './dev/Gallery';
 import { installE2eHooks } from './e2eHooks';
 import { buildRegistry } from './games/registry';
 import { StudioRig } from './illustrations/StudioRig';
 import { GameHost } from './screens/GameHost';
 import { ScreenRouter } from './screens/ScreenRouter';
+import { loadStoredOverride, resolveInitialQuality } from './state/quality';
+import { appStore, useApp } from './state/store';
+import { useIdle } from './state/useIdle';
 import { Bezel } from './tube/Bezel';
+import { CssFallback } from './tube/CssFallback';
 import { computeLayout } from './tube/geometry';
+import { PerfAutoSelect } from './tube/PerfAutoSelect';
 import { TubeRenderer } from './tube/TubeRenderer';
+import { useGlobalInput } from './ui/useGlobalInput';
+import { useKiosk } from './ui/useKiosk';
 
 const params = new URLSearchParams(window.location.search);
-const games = buildRegistry({ includeTestPattern: params.has('e2e'), includeBrokenGame: params.has('brokengame') });
+const cfg = effectiveConfig(window.location.search);
+const isE2e = params.has('e2e');
+const games = buildRegistry({ includeTestPattern: isE2e, includeBrokenGame: params.has('brokengame') });
+
+const hasWebGL2 = (() => {
+  try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; }
+})();
+const initial = resolveInitialQuality(config.defaultQuality, loadStoredOverride(), hasWebGL2);
+appStore.setState({ quality: initial.quality, qualityOverride: initial.qualityOverride, debug: params.has('debug') });
 installE2eHooks();
 
 function Monitor({ children }: { children: ReactNode }) {
@@ -21,17 +37,37 @@ function Monitor({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
+  useGlobalInput();
+  useIdle(cfg);
+  useKiosk(!isE2e);
+  const quality = useApp((s) => s.quality);
+  const contextLost = useApp((s) => s.contextLost);
+  const fallback = !hasWebGL2 || quality === 'safe';
+
   return (
-    <Canvas orthographic flat dpr={[1, 2]} camera={{ position: [0, 0, 1000], zoom: 1, near: 0.1, far: 5000 }}
-      gl={{ antialias: true, powerPreference: 'high-performance' }}>
-      <Monitor>
-        {params.has('gallery') ? <Gallery /> : (
-          <>
-            <StudioRig />
-            <ScreenRouter games={games} gameHost={<GameHost games={games} />} />
-          </>
-        )}
-      </Monitor>
-    </Canvas>
+    <>
+      {!fallback && (
+        <Canvas orthographic flat dpr={[1, 2]} camera={{ position: [0, 0, 1000], zoom: 1, near: 0.1, far: 5000 }}
+          gl={{ antialias: true, powerPreference: 'high-performance' }}
+          onCreated={({ gl }) => {
+            const canvas = gl.domElement;
+            canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); appStore.getState().setContextLost(true); });
+            canvas.addEventListener('webglcontextrestored', () => appStore.getState().setContextLost(false));
+          }}>
+          <Monitor>
+            {/* Unmount screens while the context is lost so only the CSS fallback handles input.
+                StudioRig stays out of the gallery path — Gallery renders its own StudioRig (Task 13). */}
+            {!contextLost && (params.has('gallery') ? <Gallery /> : (
+              <>
+                <StudioRig />
+                <ScreenRouter games={games} gameHost={<GameHost games={games} />} />
+              </>
+            ))}
+          </Monitor>
+          {initial.autoSelect && <PerfAutoSelect />}
+        </Canvas>
+      )}
+      {(fallback || contextLost) && <CssFallback games={games} />}
+    </>
   );
 }

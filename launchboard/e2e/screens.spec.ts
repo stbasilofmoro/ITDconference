@@ -29,9 +29,8 @@ test('boot → attract → board, with pointer focus through the curved glass', 
   await page.mouse.move(pt.px, pt.py);
   await expect.poll(async () => (await state()).focusIndex).toBe(4);
 
-  // enabled in Task 15
-  // await page.keyboard.press('ArrowLeft');
-  // await expect.poll(async () => (await state()).focusIndex).toBe(3);
+  await page.keyboard.press('ArrowLeft');
+  await expect.poll(async () => (await state()).focusIndex).toBe(3);
 
   expect(errors).toEqual([]);
 });
