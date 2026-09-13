@@ -18,9 +18,13 @@ npx playwright install chromium && npm run e2e
 
 Useful URL flags: `?debug` (tube tuning panel), `?gallery` (all illustrations), `?idle=5000` (idle timeout in ms), `?gameidle=10000`.
 
+## One-time GitHub setup
+
+Before the first deploy, in the repo's **Settings → Pages**, set **Source: GitHub Actions** (the `deploy.yml` workflow publishes there; it won't have anywhere to publish to until this is set once).
+
 ## Booth setup
 
-1. Open the deployed URL once while online so the offline cache fills.
+1. Open the deployed URL once while online (the service worker caches the app and fonts).
 2. Launch Chrome in kiosk mode: `chrome --kiosk --autoplay-policy=no-user-gesture-required https://stbasilofmoro.github.io/ITDconference/`
 3. Touch the screen once to enter fullscreen and keep the display awake.
 
@@ -32,7 +36,9 @@ Edit `launchboard/src/config.ts`: `boothNumber`, `tickerLines`, `subcopy`, idle 
 
 ## Add a game
 
-Add an entry to `BASE_GAMES` in `launchboard/src/games/registry.ts` with `status: 'playable'` and a `load: () => import('./my-game/MyGame')`. The component receives `{ ctx }` (`exit()`, `input.subscribe()`, `tube.pulse()`, `quality`) and renders R3F content in the 1920×1080 centered content scene.
+The board's grid is fixed at 6 tiles: `BASE_GAMES` in `launchboard/src/games/registry.ts` always has exactly `GRID_COUNT` (6) entries, so adding a game means replacing one of the existing `soon(...)` "Coming soon..." slots rather than appending a 7th. Change that slot to `status: 'playable'` with a `load: () => import('./my-game/MyGame')`. The component receives `{ ctx }` (`exit()`, `input.subscribe()`, `tube.pulse()`, `quality`) and renders R3F content in the 1920×1080 centered content scene.
+
+CI runs the test suite (`npm test`, see `.github/workflows/deploy.yml`), and `tests/registry.test.ts` asserts specifics of the current placeholder slots (illustrations, titles, count) — update that test to match whichever slot you replaced, or the build will fail.
 
 ## Fonts
 
