@@ -27,9 +27,21 @@ const TEST_PATTERN: GameDefinition = {
   load: () => import('./test-pattern/TestPattern'),
 };
 
-export function buildRegistry(opts: { includeTestPattern: boolean }): GameDefinition[] {
+export const BROKEN_GAME_ID = 'broken-game';
+
+const BROKEN_GAME: GameDefinition = {
+  id: BROKEN_GAME_ID,
+  title: 'Broken Game',
+  accent: 'orange',
+  illustration: 'train',
+  status: 'playable',
+  load: () => Promise.reject(new Error('intentional load failure (e2e)')),
+};
+
+export function buildRegistry(opts: { includeTestPattern: boolean; includeBrokenGame?: boolean }): GameDefinition[] {
   const games = [...BASE_GAMES];
   if (opts.includeTestPattern) games[0] = TEST_PATTERN;
+  if (opts.includeBrokenGame) games[1] = BROKEN_GAME;
   return games;
 }
 

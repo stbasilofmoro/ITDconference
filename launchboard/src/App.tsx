@@ -4,13 +4,14 @@ import { Gallery } from './dev/Gallery';
 import { installE2eHooks } from './e2eHooks';
 import { buildRegistry } from './games/registry';
 import { StudioRig } from './illustrations/StudioRig';
+import { GameHost } from './screens/GameHost';
 import { ScreenRouter } from './screens/ScreenRouter';
 import { Bezel } from './tube/Bezel';
 import { computeLayout } from './tube/geometry';
 import { TubeRenderer } from './tube/TubeRenderer';
 
 const params = new URLSearchParams(window.location.search);
-const games = buildRegistry({ includeTestPattern: params.has('e2e') });
+const games = buildRegistry({ includeTestPattern: params.has('e2e'), includeBrokenGame: params.has('brokengame') });
 installE2eHooks();
 
 function Monitor({ children }: { children: ReactNode }) {
@@ -27,7 +28,7 @@ export default function App() {
         {params.has('gallery') ? <Gallery /> : (
           <>
             <StudioRig />
-            <ScreenRouter games={games} />
+            <ScreenRouter games={games} gameHost={<GameHost games={games} />} />
           </>
         )}
       </Monitor>

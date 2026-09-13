@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BASE_GAMES, buildRegistry, validateRegistry, TEST_PATTERN_ID, type GameDefinition } from '../src/games/registry';
+import { BASE_GAMES, buildRegistry, validateRegistry, TEST_PATTERN_ID, BROKEN_GAME_ID, type GameDefinition } from '../src/games/registry';
 
 describe('registry', () => {
   it('ships six coming-soon slots with distinct illustrations', () => {
@@ -32,5 +32,15 @@ describe('registry', () => {
       'duplicate id "a"',
       'playable game "a" has no load()',
     ]);
+  });
+});
+
+describe('broken game option', () => {
+  it('puts a failing playable game in slot 1 only when requested', async () => {
+    expect(buildRegistry({ includeTestPattern: true })[1].id).not.toBe(BROKEN_GAME_ID);
+    const games = buildRegistry({ includeTestPattern: true, includeBrokenGame: true });
+    expect(games[1]).toMatchObject({ id: BROKEN_GAME_ID, status: 'playable' });
+    await expect(games[1].load!()).rejects.toThrow('intentional');
+    expect(validateRegistry(games)).toEqual([]);
   });
 });
