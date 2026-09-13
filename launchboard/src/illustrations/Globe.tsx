@@ -16,7 +16,15 @@ const CONTINENTS: LonLat[][] = [
   [[-50, 60], [-20, 70], [-30, 83], [-60, 80]],
 ];
 
+let texture: THREE.CanvasTexture | null = null;
+
+// A module-level singleton (like ShadowBlob.tsx's `blobTexture`), not a per-mount `useMemo`:
+// the underlying <canvas> and CanvasTexture (and its uploaded GPU texture) would otherwise be
+// recreated — and the old one only GC'd, never explicitly disposed — every time Board mounts
+// a fresh Globe (e.g. attract → board → attract cycling), leaking one canvas + GPU texture
+// per mount for the life of the tab.
 function globeTexture(): THREE.CanvasTexture {
+  if (texture) return texture;
   const c = document.createElement('canvas');
   c.width = 1024;
   c.height = 512;
@@ -40,6 +48,7 @@ function globeTexture(): THREE.CanvasTexture {
   }
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
+  texture = t;
   return t;
 }
 
