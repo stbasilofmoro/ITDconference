@@ -74,9 +74,14 @@ void main() {
   // Scanlines: beam gets wider on bright pixels
   float lum = clamp(dot(col, LUMA), 0.0, 1.0);
   float beam = mix(uScanBeamMin, uScanBeamMax, lum);
-  float d = abs(fract(c.y * uScanlines) - 0.5) * 2.0;
+  float lineCoord = c.y * uScanlines;
+  // Band-limit: fade the scanline modulation out as lines approach the pixel Nyquist limit
+  float fw = fwidth(lineCoord);
+  float scanAA = 1.0 - smoothstep(0.25, 0.5, fw);
+  float scanAmt = uScanStrength * scanAA;
+  float d = abs(fract(lineCoord) - 0.5) * 2.0;
   float scan = exp(-2.0 * (d / beam) * (d / beam));
-  col *= mix(1.0, scan, uScanStrength) * (1.0 + uScanStrength * 0.4);
+  col *= mix(1.0, scan, scanAmt) * (1.0 + scanAmt * 0.4);
 
   // Phosphor mask in device pixels
   vec2 fc = gl_FragCoord.xy;

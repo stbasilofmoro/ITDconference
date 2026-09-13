@@ -39,8 +39,8 @@ describe('presets', () => {
 
   it('chooses a scanline count from canvas height', () => {
     expect(scanlineCount(2160)).toBe(540);
-    expect(scanlineCount(1080)).toBe(540);
-    expect(scanlineCount(800)).toBe(400);
+    expect(scanlineCount(1080)).toBe(360);
+    expect(scanlineCount(800)).toBe(266);
     expect(scanlineCount(100)).toBe(120);
   });
 });

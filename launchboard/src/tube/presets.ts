@@ -84,5 +84,5 @@ export function pickPreset(frameTimesMs: number[], current: QualityPreset): Qual
 }
 
 export function scanlineCount(canvasHeightPx: number): number {
-  return Math.min(540, Math.max(120, Math.floor(canvasHeightPx / 2)));
+  return Math.min(540, Math.max(120, Math.floor(canvasHeightPx / 3)));
 }

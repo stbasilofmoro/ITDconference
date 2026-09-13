@@ -21,6 +21,17 @@ function SpinningTie() {
   );
 }
 
+// Small camera-facing target near the top-left of the content. Its 18px half-size is smaller than the
+// ~34 content px offset between curved and flat (no-barrel) pointer mapping there, so only curved mapping hits it.
+function CornerTarget() {
+  return (
+    <mesh position={[-760, 400, 0]} onClick={() => { clicks += 1; }}>
+      <boxGeometry args={[36, 36, 36]} />
+      <meshStandardMaterial color={colors.kilnPink} roughness={0.8} />
+    </mesh>
+  );
+}
+
 export default function App() {
   return (
     <Canvas orthographic flat dpr={[1, 2]} camera={{ position: [0, 0, 1000], zoom: 1, near: 0.1, far: 5000 }}
@@ -29,6 +40,7 @@ export default function App() {
         <ambientLight intensity={0.6} />
         <directionalLight position={[-400, 800, 600]} intensity={1.6} />
         <SpinningTie />
+        <CornerTarget />
       </TubeRenderer>
     </Canvas>
   );

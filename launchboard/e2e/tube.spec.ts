@@ -26,5 +26,28 @@ test('tube renders and maps pointer hits through the curved glass', async ({ pag
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => window.__launchboard!.clicks!())).toBe(1);
 
+  // Small corner target: the curved mapping must hit it, the flat (no-barrel) mapping must miss it.
+  const corner = await page.evaluate(() => window.__launchboard!.contentToScreen(-760, 400));
+  await page.mouse.click(corner.px, corner.py);
+  await expect.poll(() => page.evaluate(() => window.__launchboard!.clicks!())).toBe(2);
+
+  const flat = await page.evaluate(([x, y]) => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const scale = Math.min(w / 2160, h / 1410);
+    const tubeX = (w - 2160 * scale) / 2 + 120 * scale;
+    const tubeY = (h - 1410 * scale) / 2 + 110 * scale;
+    const tubeW = 1920 * scale;
+    const tubeH = 1080 * scale;
+    return { px: tubeX + (x / 1920 + 0.5) * tubeW, py: tubeY + (1 - (y / 1080 + 0.5)) * tubeH };
+  }, [-760, 400]);
+  test.info().annotations.push({
+    type: 'flat-vs-curved-px',
+    description: Math.hypot(flat.px - corner.px, flat.py - corner.py).toFixed(1),
+  });
+  await page.mouse.click(flat.px, flat.py);
+  await page.waitForTimeout(200);
+  expect(await page.evaluate(() => window.__launchboard!.clicks!())).toBe(2);
+
   expect(errors).toEqual([]);
 });
