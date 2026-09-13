@@ -21,9 +21,9 @@ export type TubeParams = {
 };
 
 const pro: TubeParams = {
-  curvature: 0.06,
+  curvature: 0.03,
   cornerRadius: 42,
-  chroma: 0.0015,
+  chroma: 0.0008,
   bloom: 0.35,
   bloomThreshold: 0.6,
   maskStrength: 0.35,
@@ -42,7 +42,7 @@ const pro: TubeParams = {
 
 export const PRESETS: { pro: TubeParams; standard: TubeParams } = {
   pro,
-  standard: { ...pro, bloom: 0, persistence: 0, chroma: 0.001 },
+  standard: { ...pro, bloom: 0, persistence: 0, chroma: 0.0006 },
 };
 
 export const PARAM_RANGES: Record<keyof TubeParams, { min: number; max: number; step: number }> = {

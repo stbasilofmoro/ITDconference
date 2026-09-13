@@ -20,31 +20,39 @@ export function Board({ games }: { games: GameDefinition[] }) {
   const [launching, setLaunching] = useState<number | null>(null);
   const [shakes, setShakes] = useState<Record<number, number>>({});
   const launchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const launchingRef = useRef<number | null>(null);
 
   useEffect(() => () => clearTimeout(launchTimer.current), []);
 
   const select = useCallback((i: number) => {
     const game = games[i];
     appStore.getState().setFocus(i);
-    if (launching !== null) return;
+    if (launchingRef.current !== null) return;
     if (game.status !== 'playable') {
       setShakes((s) => ({ ...s, [i]: performance.now() }));
       return;
     }
+    launchingRef.current = i;
     setLaunching(i);
     tubeBus.pulse('channel');
     launchTimer.current = setTimeout(() => {
       appStore.getState().launch(game.id);
+      launchingRef.current = null;
       setLaunching(null);
     }, LAUNCH_DELAY_MS);
-  }, [games, launching]);
+  }, [games]);
+
+  // Keep a ref to the latest `select` so the inputBus subscription below can stay
+  // mounted for the lifetime of the screen instead of resubscribing on every launch.
+  const selectRef = useRef(select);
+  useEffect(() => { selectRef.current = select; }, [select]);
 
   useEffect(() => inputBus.subscribe((action) => {
     const s = appStore.getState();
     if (s.screen !== 'board') return;
-    if (action === 'select') select(s.focusIndex);
+    if (action === 'select') selectRef.current(s.focusIndex);
     else if (action !== 'back') s.setFocus(moveFocus(s.focusIndex, action, 3, games.length));
-  }), [select, games.length]);
+  }), [games.length]);
 
   return (
     <>
