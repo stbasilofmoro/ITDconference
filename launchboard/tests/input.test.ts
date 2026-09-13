@@ -113,4 +113,40 @@ describe('inputBus', () => {
       expect(fn2).not.toHaveBeenCalled();
     });
   });
+
+  describe('scope', () => {
+    it('delivers a buffered action when the scope is unchanged at subscribe time', () => {
+      const clock = fakeClock();
+      const bus = createInputBus(clock.now, () => 'board');
+      bus.emit('select');
+      const fn = vi.fn();
+      bus.subscribe(fn);
+      expect(fn).toHaveBeenCalledWith('select');
+    });
+
+    it('discards a buffered action when the scope has changed by subscribe time', () => {
+      const clock = fakeClock();
+      let scope = 'game';
+      const bus = createInputBus(clock.now, () => scope);
+      bus.emit('select');
+      scope = 'board';
+      const fn = vi.fn();
+      bus.subscribe(fn);
+      expect(fn).not.toHaveBeenCalled();
+    });
+
+    it('models the SIGNAL LOST relaunch bug: emitted in "game", subscribed in "board" after the screen swap', () => {
+      const clock = fakeClock();
+      let screen = 'game';
+      const bus = createInputBus(clock.now, () => screen);
+      // Enter pressed while SIGNAL LOST is showing (store still reports 'game').
+      bus.emit('select');
+      // GameHost's timeout fires, exitGame() swaps the store to 'board', and Board mounts.
+      screen = 'board';
+      const fn = vi.fn();
+      bus.subscribe(fn);
+      // Must NOT relaunch whatever tile is focused on the board.
+      expect(fn).not.toHaveBeenCalled();
+    });
+  });
 });

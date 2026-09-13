@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { asset } from '../asset';
 import { colors } from '../brand';
 import { config, tickerItems } from '../config';
@@ -61,20 +61,28 @@ export function CssFallback({ games }: { games: GameDefinition[] }) {
     else if (action === 'exitGame') s.exitGame();
   }, []);
 
-  const select = (i: number) => {
+  const select = useCallback((i: number) => {
     appStore.getState().setFocus(i);
     if (games[i].status !== 'playable') return;
     setNote(true);
     setTimeout(() => setNote(false), 3000);
-  };
+  }, [games]);
+
+  // Keep a ref to the latest `select` so the inputBus subscription below can stay mounted
+  // for the lifetime of the screen instead of resubscribing on every render — see Board.tsx
+  // for the same pattern and why a bare unmount cleanup would be wrong under StrictMode.
+  const selectRef = useRef(select);
+  useEffect(() => { selectRef.current = select; }, [select]);
 
   // A plain (passive) effect: inputBus buffers the most recent action for PENDING_TTL_MS
   // when it has no subscriber yet, so this doesn't need to race to subscribe synchronously.
+  // Proper deps (just games.length, mirroring Board.tsx) so this doesn't resubscribe on
+  // every render — e.g. every focus change or note timeout.
   useEffect(() => inputBus.subscribe((a) => {
     const s = appStore.getState();
-    if (a === 'select') select(s.focusIndex);
+    if (a === 'select') selectRef.current(s.focusIndex);
     else if (a !== 'back') s.setFocus(moveFocus(s.focusIndex, a, 3, games.length));
-  }));
+  }), [games.length]);
 
   return (
     <div className="fb" data-testid="css-fallback">
