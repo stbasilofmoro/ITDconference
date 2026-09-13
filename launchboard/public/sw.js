@@ -1,4 +1,7 @@
-const CACHE = 'arema-launchboard-v1';
+// Versioned per build via the `v` query param the client registers this script with
+// (see src/main.tsx / __BUILD_ID__), so a redeploy gets a fresh cache name and `activate`
+// below evicts every stale one instead of piling newly hashed assets into the same cache.
+const CACHE = 'arema-launchboard-' + (new URL(self.location.href).searchParams.get('v') || 'dev');
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
