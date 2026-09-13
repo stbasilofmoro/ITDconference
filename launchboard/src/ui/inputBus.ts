@@ -6,8 +6,14 @@ export type InputBus = { emit(a: Action): void; subscribe(fn: (a: Action) => voi
  * How long a buffered action stays deliverable to the next subscriber. Covers the gap
  * between a screen transition (which updates the store synchronously) and that screen's
  * component actually committing its inputBus subscription — see Board.tsx/CssFallback.tsx.
+ *
+ * Sized generously (not just for the common sub-frame case): under real GPU/render-thread
+ * contention (observed with swiftshader's software WebGL rasterizer in headless e2e runs —
+ * see e2e/smoke.spec.ts), that gap has been measured over 1100ms, well past a naive "one
+ * frame" budget. A stale buffered action is harmless (it is only ever the single most
+ * recent action, and is consumed exactly once), so erring high here has no real downside.
  */
-export const PENDING_TTL_MS = 750;
+export const PENDING_TTL_MS = 3000;
 
 export function createInputBus(now: () => number = () => performance.now()): InputBus {
   const subs = new Set<(a: Action) => void>();

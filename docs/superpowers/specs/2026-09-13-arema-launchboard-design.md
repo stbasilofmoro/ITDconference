@@ -96,7 +96,7 @@ The guide page itself follows the brand (grey ground, Barlow, stacked headlines)
 
 ### 5.1 Stack
 
-Vite, React 18, TypeScript, `@react-three/fiber`, `@react-three/drei` (text via troika, helpers), `three`, `zustand` (state), Vitest, Playwright. Fonts: Barlow self-hosted woff2 in `public/fonts/` (SIL OFL). Deployed as static build (GitHub Pages via Actions), with a service worker for offline caching at the venue.
+Vite, React 19 (required by @react-three/fiber 9), TypeScript, `@react-three/fiber`, `@react-three/drei` (text via troika, helpers), `three`, `zustand` (state), Vitest, Playwright. Fonts: Barlow self-hosted woff2 in `public/fonts/` (SIL OFL). Deployed as static build (GitHub Pages via Actions), with a service worker for offline caching at the venue.
 
 ### 5.2 Render pipeline
 
@@ -104,12 +104,12 @@ One `<Canvas>`; two passes per frame.
 
 1. **Content pass** — the active screen's scene renders into an offscreen `WebGLRenderTarget` at 1920×1080 (scaled by quality preset).
 2. **Tube pass** — a full-screen quad with the CRT fragment shader samples the content target, applying in order:
-   1. Barrel curvature (configurable k), black outside a rounded-rect tube mask.
-   2. Horizontal chromatic convergence error, scaled toward edges.
-   3. Bloom: add a separable-blurred, downsampled bright-pass of the content.
-   4. Aperture-grille RGB phosphor mask (vertical triad stripes); slot-mask variant selectable.
-   5. Scanline gaps with brightness-dependent beam width (bright lines fatten).
-   6. Phosphor persistence: blend with previous tube output (ping-pong target).
+   1. Phosphor persistence: blend with previous tube output (ping-pong target) (runs in content space so the mask is not smeared).
+   2. Barrel curvature (configurable k), black outside a rounded-rect tube mask.
+   3. Horizontal chromatic convergence error, scaled toward edges.
+   4. Bloom: add a separable-blurred, downsampled bright-pass of the content.
+   5. Aperture-grille RGB phosphor mask (vertical triad stripes); slot-mask variant selectable.
+   6. Scanline gaps with brightness-dependent beam width (bright lines fatten).
    7. Rolling refresh band + low-amplitude flicker.
    8. Vignette / corner falloff.
    9. Glass layer: soft reflection highlight, faint grain.
@@ -161,7 +161,7 @@ interface GameDefinition {
   id: string;
   title: string;
   accent: 'orange' | 'pink' | 'green';
-  Illustration: React.ComponentType;
+  illustration: IllustrationId; // mapped to a component in illustrations/index.ts
   status: 'playable' | 'coming-soon';
   load?: () => Promise<{ default: React.ComponentType<{ ctx: GameContext }> }>;
 }
@@ -207,3 +207,13 @@ Games render R3F content into the same content pass, so they inherit the tube au
 - DINPro is commercially licensed and is **not** bundled; Barlow (SIL OFL) is used in all shipped code.
 - Illustrations are original low-poly recreations in ITD's style, not copies of the site's PNGs.
 - The monitor bezel is generic and carries only ITD branding.
+
+## 10. Implementation notes
+
+Approved deviations discovered and ruled on during implementation:
+
+- Pro tube curvature is `0.03` and chroma is `0.0008` (standard chroma `0.0006`), flatter than an initial draft — closer to a real pro broadcast monitor's very shallow barrel than a consumer-CRT fisheye look.
+- Scanline period is band-limited to ≥3 device px, using `fwidth()` to keep the line width proportional to on-screen derivative change, to prevent moiré at typical kiosk viewing distances and DPRs.
+- `StudioRig` light intensities were recalibrated for three.js r155+'s physically-based lighting defaults (its light unit/exposure handling changed from the versions earlier drafts of this spec assumed).
+- `inputBus` buffers the single most recent action for a TTL when it is emitted with no active subscriber, delivering it once to the next subscriber — this is what makes "press Enter/Space immediately after a screen change" reliable, and Task 17's smoke test depends on it. The TTL was widened from an initial 750 ms to 3000 ms after Task 17's e2e runs showed the gap between a screen transition and its component's effect actually committing can exceed 750 ms under this project's headless, software-rendered (`swiftshader`) Playwright environment; a stale buffered action is harmless (only the single most recent one is ever kept), so erring high has no real downside.
+- Playwright runs with `workers: 1` (see `launchboard/playwright.config.ts`): this suite's WebGL rendering is CPU-bound software rasterization, which contends badly — and can stall the main thread — under parallel workers.

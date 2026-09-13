@@ -53,6 +53,13 @@ export default function App() {
           gl={{ antialias: true, powerPreference: 'high-performance' }}
           onCreated={({ gl }) => {
             const canvas = gl.domElement;
+            // A freshly created context is by definition not lost — clear any stale flag left
+            // by a previous canvas's context-lost event that fired after that canvas was
+            // already unmounted (observed under software WebGL when quality cycles Safe→Pro
+            // in quick succession). Without this reset, `contextLost` can stay stuck `true`
+            // forever — there is no live canvas left to fire `webglcontextrestored` on — and
+            // the CSS fallback would then never clear even once a healthy Canvas is showing.
+            appStore.getState().setContextLost(false);
             canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); appStore.getState().setContextLost(true); });
             canvas.addEventListener('webglcontextrestored', () => appStore.getState().setContextLost(false));
           }}>
