@@ -6,6 +6,7 @@ import { Bezel } from './tube/Bezel';
 import { computeLayout } from './tube/geometry';
 import { installE2eHooks } from './e2eHooks';
 import { colors } from './brand';
+import { Gallery } from './dev/Gallery';
 
 let clicks = 0;
 installE2eHooks({ clicks: () => clicks });
@@ -45,10 +46,16 @@ export default function App() {
     <Canvas orthographic flat dpr={[1, 2]} camera={{ position: [0, 0, 1000], zoom: 1, near: 0.1, far: 5000 }}
       gl={{ antialias: true, powerPreference: 'high-performance' }}>
       <Monitor>
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[-400, 800, 600]} intensity={1.6} />
-        <SpinningTie />
-        <CornerTarget />
+        {new URLSearchParams(location.search).has('gallery') ? (
+          <Gallery />
+        ) : (
+          <>
+            <ambientLight intensity={0.6} />
+            <directionalLight position={[-400, 800, 600]} intensity={1.6} />
+            <SpinningTie />
+            <CornerTarget />
+          </>
+        )}
       </Monitor>
     </Canvas>
   );
