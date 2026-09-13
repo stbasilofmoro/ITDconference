@@ -11,7 +11,7 @@ export const materials = {
   tie: std(tubeColors.tieOrange, { roughness: 0.85 }),
   tieEnd: std('#C97A2E', { roughness: 0.9 }),
   rail: std('#8E8E90', { roughness: 0.45, metalness: 0.35 }),
-  glass: std('#E6E6E6', { roughness: 0.15, transparent: true, opacity: 0.38, depthWrite: false }),
+  glass: std('#9A9A9A', { roughness: 0.15, transparent: true, opacity: 0.65, depthWrite: false, side: THREE.DoubleSide }),
   kilnCharge: std(tubeColors.kilnPink, { emissive: new THREE.Color(tubeColors.kilnPink), emissiveIntensity: 0.6 }),
   biochar: std(colors.biochar, { roughness: 0.95 }),
   land: std(tubeColors.carbonGreen, { roughness: 0.7 }),
