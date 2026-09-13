@@ -1,14 +1,9 @@
 import { test, expect } from '@playwright/test';
+import './hooks';
 
 // Content-space center of tile index 4 (see src/ui/layout.ts). Hard-coded because
 // Playwright cannot import modules that read import.meta.env.
 const TILE_4: [number, number] = [325, -140];
-
-type Hooks = {
-  getState(): { screen: string; focusIndex: number; toBoard(): void };
-  contentToScreen(x: number, y: number): { px: number; py: number };
-};
-declare global { interface Window { __launchboard?: Hooks } }
 
 test('boot → attract → board, with pointer focus through the curved glass', async ({ page }) => {
   const errors: string[] = [];

@@ -12,6 +12,7 @@ export function installE2eHooks(extra: Record<string, unknown> = {}) {
       const k = paramsFor(appStore.getState().quality, tubeBus.overrides).curvature;
       return contentToScreen(x, y, layout, k);
     },
+    tubeOverrides: () => ({ ...tubeBus.overrides }),
     ...extra,
   };
 }

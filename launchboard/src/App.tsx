@@ -1,6 +1,7 @@
 import { Suspense, type ReactNode } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { effectiveConfig, config } from './config';
+import { DebugPanel } from './debug/DebugPanel';
 import { Gallery } from './dev/Gallery';
 import { installE2eHooks } from './e2eHooks';
 import { buildRegistry } from './games/registry';
@@ -41,6 +42,7 @@ export default function App() {
   useKiosk(!isE2e);
   const quality = useApp((s) => s.quality);
   const contextLost = useApp((s) => s.contextLost);
+  const debug = useApp((s) => s.debug);
   const fallback = !hasWebGL2 || quality === 'safe';
   useIdle(cfg, fallback || contextLost);
 
@@ -72,6 +74,7 @@ export default function App() {
         </Canvas>
       )}
       {(fallback || contextLost) && <CssFallback games={games} />}
+      {debug && <DebugPanel />}
     </>
   );
 }
