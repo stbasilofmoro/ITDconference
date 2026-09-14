@@ -72,11 +72,11 @@ function World({ run, camera }: { run: Run; camera: PerspectiveCamera }) {
     <primitive object={camera}><group ref={gun} position={[0.36, -0.36, -0.64]} rotation={[0.04, -0.15, -0.08]} scale={0.75}><ScannerModel scanning={run.beamTime > 0} /><Box at={[0, -0.27, 0.25]} size={[0.19, 0.19, 0.28]} color="#BA9377" round /></group></primitive>
   </>;
 }
-export function HallScene({ run }: { run: Run }) {
+export function HallScene({ run, touch = false }: { run: Run; touch?: boolean }) {
   const gl = useThree((s) => s.gl);
   const scene = useMemo(() => { const s = new Scene(); s.background = new Color('#BEBBB4'); s.fog = new Fog('#BEBBB4', 25, 68); return s; }, []);
   const camera = useMemo(() => new PerspectiveCamera(68, 1920 / 1080, 0.06, 85), []);
-  const target = useFBO(1536, 864, { samples: 2, depthBuffer: true });
+  const target = useFBO(touch ? 1280 : 1536, touch ? 720 : 864, { samples: touch ? 0 : 2, depthBuffer: true });
   useFrame(() => {
     camera.position.set(run.x, 1.65, run.z); camera.rotation.order = 'YXZ'; camera.rotation.set(run.pitch, -run.yaw, 0); camera.updateMatrixWorld();
     const previous = gl.getRenderTarget(); gl.setRenderTarget(target); gl.clear(); gl.render(scene, camera); gl.setRenderTarget(previous);

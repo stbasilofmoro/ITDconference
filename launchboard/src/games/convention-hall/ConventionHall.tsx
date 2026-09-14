@@ -7,6 +7,8 @@ import { appStore } from '../../state/store';
 import { scoreStore } from '../../leaderboard/scores';
 import { ScoreButton } from '../../leaderboard/ScoreButton';
 import { HallScene } from './HallScene';
+import { HallTouchInput } from './touchInput';
+import { TouchHudPortal } from './TouchHud';
 import { aim, aimedPerson, CONTACT_GOAL, currentTarget, newRun, scan, SHIFT_SECONDS, start, tick, togglePause, type Controls, type Run } from './engine';
 import { ATTENDEE_NAMES, COMPANIES } from './companies';
 import { companyTexture } from './logos';
@@ -25,16 +27,18 @@ function Button({ x, y, width = 160, height = 60, children, onClick, hold }: { x
 }
 export default function ConventionHall({ ctx }: { ctx: GameContext }) {
   const [run] = useState(newRun), [, redraw] = useState(0);
+  const [touch] = useState(() => new HallTouchInput());
+  const [touchMode] = useState(() => navigator.maxTouchPoints > 0 || matchMedia('(any-pointer: coarse)').matches);
   const paint = useRef(0), scoreId = useRef(crypto.randomUUID()), keys = useRef(new Set<string>()), held = useRef(new Set<string>());
   const drag = useRef<{ id: number; x: number; y: number; distance: number } | null>(null);
   const refresh = useCallback(() => redraw((v) => v + 1), []);
-  const clearControls = useCallback(() => { keys.current.clear(); held.current.clear(); drag.current = null; }, []);
+  const clearControls = useCallback(() => { keys.current.clear(); held.current.clear(); drag.current = null; touch.reset(); }, [touch]);
   const select = useCallback(() => {
     if (scoreStore.getState().open) return;
     if (run.paused) { togglePause(run); clearControls(); }
     else if (run.phase === 'intro') start(run);
     else if (run.phase === 'won' || run.phase === 'lost') { Object.assign(run, newRun()); scoreId.current = crypto.randomUUID(); clearControls(); start(run); }
-    else { const before = run.found; scan(run); if (run.found > before) ctx.tube.pulse('flash'); }
+    else { const before = run.found; scan(run); if (run.found > before) ctx.tube.pulse('flash'); if (run.found === CONTACT_GOAL) clearControls(); }
     refresh();
   }, [run, refresh, clearControls, ctx.tube]);
   const pause = useCallback(() => { togglePause(run); clearControls(); refresh(); }, [run, clearControls, refresh]);
@@ -55,7 +59,7 @@ export default function ConventionHall({ ctx }: { ctx: GameContext }) {
     const before = run.health;
     if (!document.hidden && !scoreStore.getState().open) {
       const down = (...codes: string[]) => codes.some((code) => keys.current.has(code) || held.current.has(code)) ? 1 : 0;
-      const controls: Controls = { forward: down('KeyW', 'ArrowUp', 'forward') - down('KeyS', 'ArrowDown', 'back'), strafe: down('KeyD', 'right') - down('KeyA', 'left'), turn: down('ArrowRight', 'KeyE', 'turnRight') - down('ArrowLeft', 'KeyQ', 'turnLeft'), look: 0 };
+      const controls: Controls = { forward: touch.forward + down('KeyW', 'ArrowUp', 'forward') - down('KeyS', 'ArrowDown', 'back'), strafe: touch.strafe + down('KeyD', 'right') - down('KeyA', 'left'), turn: down('ArrowRight', 'KeyE', 'turnRight') - down('ArrowLeft', 'KeyQ', 'turnLeft'), look: 0 };
       const pad = navigator.getGamepads?.().find((p) => p);
       if (pad) {
         const axis = (i: number) => Math.abs(pad.axes[i] ?? 0) > 0.2 ? pad.axes[i] : 0;
@@ -64,6 +68,7 @@ export default function ConventionHall({ ctx }: { ctx: GameContext }) {
       }
       if (Object.values(controls).some((v) => v !== 0)) appStore.getState().markInput(performance.now());
       tick(run, dt, controls);
+      if (run.phase !== 'playing' || run.paused) touch.reset();
     } else clearControls();
     if (run.health < before) ctx.tube.pulse('static');
     paint.current += dt; if (paint.current > 1 / 30) { paint.current = 0; refresh(); }
@@ -83,6 +88,11 @@ export default function ConventionHall({ ctx }: { ctx: GameContext }) {
   const hold = (id: string) => (down: boolean) => { if (down) held.current.add(id); else held.current.delete(id); };
   const company = currentTarget(run) ?? run.targets[run.targets.length - 1], clue = COMPANIES[company], aimed = aimedPerson(run);
   const result = run.phase === 'won' || run.phase === 'lost', modal = run.phase === 'intro' || run.paused || result;
+  if (touchMode) return <>
+    <HallScene run={run} touch />
+    <TouchHudPortal run={run} touch={touch} select={select} pause={pause} exit={ctx.exit} clear={clearControls}
+      result={{ id: scoreId.current, game: 'convention-hall', score: run.score, detail: `${run.found} company contacts / ${run.scanCount} scanned badges / ${run.health}% fresh air` }} />
+  </>;
   return <>
     <HallScene run={run} />
     <mesh position={[0, 0, 300]} onPointerDown={(e) => { if (modal) return; e.stopPropagation(); drag.current = { id: e.pointerId, x: e.nativeEvent.clientX, y: e.nativeEvent.clientY, distance: 0 }; (e.target as unknown as { setPointerCapture(id: number): void }).setPointerCapture(e.pointerId); }} onPointerMove={lookMove}
