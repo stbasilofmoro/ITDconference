@@ -36,6 +36,8 @@ Staff shortcuts: **Ctrl+Shift+Q** cycles the quality preset (Pro â†’ Standard â†
 
 Edit `launchboard/src/config.ts`: `boothNumber`, `tickerLines`, `subcopy`, idle timeouts, `defaultQuality`.
 
+`ATTRACT_PRIZE` in the same file controls the touch-to-play screen's top-three maple syrup promotion. The attract scene includes a rotary kiln with a rotating drum and rollers, tumbling pink charge, feed hopper, exhaust stack, and cyclone bank modeled from the supplied reference.
+
 ## Add a game
 
 The first tile now launches **Beaver Crossing**, a five-level journey from the railroad yard to the steel plant. Complete all five levels to open the maple syrup prize form. Controls, level details, Formspree setup, and verification are documented in [`launchboard/BEAVER-CROSSING.md`](launchboard/BEAVER-CROSSING.md).

@@ -1,5 +1,10 @@
 export type QualitySetting = 'auto' | 'pro' | 'standard' | 'safe';
 
+export const ATTRACT_PRIZE = {
+  headline: 'Place in the top 3 in any game.',
+  reward: 'Win a bottle of maple syrup,\nshipped right to your door.',
+};
+
 export type AppConfig = {
   title: string;
   headlineLines: string[];

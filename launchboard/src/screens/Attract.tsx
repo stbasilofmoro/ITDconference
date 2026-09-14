@@ -3,10 +3,10 @@ import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import type { Group } from 'three';
 import { colors, fonts } from '../brand';
-import { config } from '../config';
+import { ATTRACT_PRIZE, config } from '../config';
 import { Iso } from '../illustrations/Iso';
 import { CrossingSignal } from '../illustrations/CrossingSignal';
-import { Kiln } from '../illustrations/Kiln';
+import { RotaryKilnDisplay } from '../illustrations/RotaryKilnDisplay';
 import { Shredder } from '../illustrations/Shredder';
 import { TieStack } from '../illustrations/TieStack';
 import { Track, Train } from '../illustrations/Train';
@@ -28,7 +28,7 @@ function Yard() {
         <Track length={70} />
         <group ref={train} position={[0, 0.3, 0]}><Train active /></group>
         <group position={[-10, 0, -15]}><Shredder active /></group>
-        <group position={[12, 0, -15]}><Kiln active /></group>
+        <group position={[4, 0, -20]} rotation={[0, Math.PI / 2, 0]} scale={2.5}><RotaryKilnDisplay /></group>
         <group position={[-3, 0, 5]}><CrossingSignal active /></group>
         <group position={[18, 0, 9]}><TieStack /></group>
       </Iso>
@@ -42,7 +42,7 @@ function BlinkingPrompt() {
   return (
     <group ref={ref}>
       <Text font={fonts.semibold} fontSize={46} color={colors.ink} anchorX="left" anchorY="middle"
-        position={[LEFT_X, -250, 200]} letterSpacing={0.14}>
+        position={[LEFT_X, -295, 200]} letterSpacing={0.14}>
         TOUCH TO PLAY
       </Text>
     </group>
@@ -54,6 +54,12 @@ export function Attract() {
     <>
       <Yard />
       <StackedHeadline lines={config.headlineLines} position={[LEFT_X, 420]} fontSize={140} lineHeight={150} />
+      <Text font={fonts.semibold} fontSize={37} color={colors.ink} anchorX="left" anchorY="top" maxWidth={660} position={[LEFT_X, -85, 200]}>
+        {ATTRACT_PRIZE.headline}
+      </Text>
+      <Text font={fonts.medium} fontSize={35} lineHeight={1.15} color={colors.slate} anchorX="left" anchorY="top" maxWidth={660} position={[LEFT_X, -140, 200]}>
+        {ATTRACT_PRIZE.reward}
+      </Text>
       <BlinkingPrompt />
       <Monogram height={56} color={colors.ink} position={[LEFT_X + 33, -430, 200]} />
       <Text font={fonts.medium} fontSize={28} color={colors.slate} anchorX="left" anchorY="middle" position={[LEFT_X + 90, -430, 200]}>
