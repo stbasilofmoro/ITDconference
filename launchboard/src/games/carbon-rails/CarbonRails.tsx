@@ -1,3 +1,4 @@
+import { useGameAudio, snapshot } from '../../audio/useGameAudio';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
@@ -21,6 +22,7 @@ function Button({ x, y, width = 210, height = 52, children, onClick, disabled = 
 export default function CarbonRails({ ctx }: { ctx: GameContext }) {
   const [run] = useState(newRun), [, redraw] = useState(0), [region, setRegion] = useState(0), [selected, setSelected] = useState(0), [zoom, setZoom] = useState(0.94);
   const [kept, setKept] = useState<number[]>([]), [help, setHelp] = useState(false), [paused, setPaused] = useState(false), [payColor, setPayColor] = useState<Color>('orange');
+  useGameAudio('carbon-rails', () => snapshot.rails(run, paused || help));
   const [ticketPage, setTicketPage] = useState(0);
   const runId = useRef(crypto.randomUUID()), clock = useRef(0), aiClock = useRef(0);
   const refresh = useCallback(() => redraw((v) => v + 1), []);

@@ -1,3 +1,4 @@
+import { useGameAudio, snapshot } from '../../audio/useGameAudio';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
@@ -27,6 +28,7 @@ function Button({ x, y, width = 160, height = 60, children, onClick, hold }: { x
 }
 export default function ConventionHall({ ctx }: { ctx: GameContext }) {
   const [run] = useState(newRun), [, redraw] = useState(0);
+  useGameAudio('convention-hall', () => snapshot.hall(run));
   const [touch] = useState(() => new HallTouchInput());
   const [touchMode] = useState(() => navigator.maxTouchPoints > 0 || matchMedia('(any-pointer: coarse)').matches);
   const paint = useRef(0), scoreId = useRef(crypto.randomUUID()), keys = useRef(new Set<string>()), held = useRef(new Set<string>());

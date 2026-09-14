@@ -32,6 +32,8 @@ GitHub Actions runs unit tests and a production build. Netlify handles deploymen
 
 Staff shortcuts: **Ctrl+Shift+Q** cycles the quality preset (Pro → Standard → Safe → Auto, remembered on this machine); **Ctrl+Shift+D** toggles the debug panel.
 
+All six games include soft sound effects and an original lo-fi soundtrack. Audio starts after a tap or keypress. Use **Sound** at the bottom center to mute or adjust music and effects separately; settings stay on this device. The idle screen and hidden tabs stay quiet. See [`launchboard/AUDIO.md`](launchboard/AUDIO.md).
+
 ## Configure
 
 Edit `launchboard/src/config.ts`: `boothNumber`, `tickerLines`, `subcopy`, idle timeouts, `defaultQuality`.

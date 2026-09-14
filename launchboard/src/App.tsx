@@ -1,3 +1,4 @@
+import { AudioControls } from './audio/AudioControls';
 import { Suspense, type ReactNode } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { effectiveConfig, config } from './config';
@@ -84,6 +85,7 @@ export default function App() {
       {(fallback || contextLost) && <CssFallback games={games} />}
       {debug && <DebugPanel />}
       <Leaderboards />
+      <AudioControls />
     </>
   );
 }

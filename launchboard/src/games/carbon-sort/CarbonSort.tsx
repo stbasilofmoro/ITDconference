@@ -1,3 +1,4 @@
+import { useGameAudio, snapshot } from '../../audio/useGameAudio';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { RoundedBox, Text } from '@react-three/drei';
@@ -83,6 +84,7 @@ import { scoreStore } from '../../leaderboard/scores';
 
 export default function CarbonSort({ ctx }: { ctx: GameContext }) {
   const run = useRef<Run>(newRun()).current;
+  useGameAudio('carbon-sort', () => snapshot.sort(run));
   const [, redraw] = useState(0);
   const lastRevision = useRef(-1);
   const scoreId = useRef(crypto.randomUUID());

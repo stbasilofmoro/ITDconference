@@ -1,3 +1,4 @@
+import { useGameAudio, snapshot } from '../../audio/useGameAudio';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import type { GameContext } from '../types';
@@ -10,6 +11,7 @@ import { JumperHud } from './Hud';
 
 export default function Jumper3({ ctx }: { ctx: GameContext }) {
   const [run] = useState(newRun), [controls] = useState(() => new JumperControls());
+  useGameAudio('jumper-3', () => snapshot.jumper(run));
   const [, redraw] = useState(0), paint = useRef(0), scoreId = useRef(crypto.randomUUID());
   const refresh = useCallback(() => redraw((n) => n + 1), []);
   const next = useCallback(() => { if (scoreStore.getState().open || run.phase === 'playing' && !run.paused) return; if (run.phase === 'won' || run.phase === 'lost') scoreId.current = crypto.randomUUID(); controls.clear(); advance(run); refresh(); }, [run, controls, refresh]);

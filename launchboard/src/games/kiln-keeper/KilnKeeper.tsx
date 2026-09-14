@@ -1,3 +1,4 @@
+import { useGameAudio, snapshot } from '../../audio/useGameAudio';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Line, RoundedBox, Text } from '@react-three/drei';
@@ -86,6 +87,7 @@ function FeedSlider({ run, change }: { run: Run; change(value: number): void }) 
 
 export default function KilnKeeper({ ctx }: { ctx: GameContext }) {
   const [run] = useState(newRun);
+  useGameAudio('kiln-keeper', () => snapshot.kiln(run));
   const [, redraw] = useState(0);
   const lastPaint = useRef(0);
   const scoreId = useRef(crypto.randomUUID());

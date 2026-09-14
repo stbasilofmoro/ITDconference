@@ -1,3 +1,4 @@
+import { useGameAudio, snapshot } from '../../audio/useGameAudio';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { RoundedBox, Text } from '@react-three/drei';
@@ -33,6 +34,7 @@ import { scoreStore } from '../../leaderboard/scores';
 
 export default function BeaverCrossing({ ctx }: { ctx: GameContext }) {
   const run = useRef<Run>(newRun()).current;
+  useGameAudio('beaver-crossing', () => snapshot.beaver(run));
   const [view, setView] = useState({ level: run.level, phase: run.phase, bestRow: 0, attempts: 0 });
   const [claimOpen, setClaimOpen] = useState(false);
   const claimRef = useRef(false);
