@@ -1,6 +1,6 @@
-# iPhone web version
+# Mobile web version
 
-The same Netlify deployment adapts automatically on touch devices with a screen's short edge at or below 500 CSS pixels. iPads and desktop booth displays retain their existing layouts. No separate deployment or App Store installation is required.
+The same Netlify deployment adapts automatically on touch devices with a screen's short edge at or below 500 CSS pixels, including iPhone and Android phones. Detection uses touch capability and screen dimensions rather than an Apple-specific user agent. Tablets and desktop booth displays retain their existing layouts. No separate deployment or app installation is required.
 
 The welcome screen and game picker scroll in portrait or landscape. Games use landscape; turning upright freezes their simulation and displays a rotate prompt. Convention Hall and Jumper clear held inputs and pause on rotation. The five-minute idle timeout closes the game and any forms, returning to Touch to Play.
 
@@ -23,4 +23,4 @@ Phone gameplay removes the CRT frame and post-processing, uses smaller render ta
 
 `npx playwright test e2e/phone.spec.ts` checks the picker, scores, sound controls, idle reset, all six games' native controls, rotation holds, and simultaneous movement/aim/jump at iPhone-sized viewports, including 667 × 375. Rendering and game logic are also covered by the existing booth tests and production build.
 
-Emulation does not verify a physical iPhone's GPU, Safari chrome, or home indicator. A final hands-on Safari check remains necessary to confirm those device details.
+Android phone emulation also checks the welcome screen, game picker, rotation prompt, and native gameplay controls. Emulation does not verify a physical phone's GPU, browser chrome, or gesture areas. Final hands-on checks in iOS Safari and Android Chrome remain necessary to confirm those device details.

@@ -25,6 +25,6 @@ export function PhoneHome({ games }: { games: GameDefinition[] }) {
 }
 export function PhoneRotate() {
   return <div className="phone-rotate" role="dialog" aria-label="Turn your phone sideways" onPointerDown={(e) => { e.stopPropagation(); phoneInput(); }} onKeyDown={(e) => { e.stopPropagation(); phoneInput(); }}>
-    <span className="phone-rotate-icon" aria-hidden="true">↻</span><h1>A little more room<br />to play.</h1><p>Turn your iPhone sideways.<br />Your game will wait right here.</p><button onClick={() => appStore.getState().exitGame()}>Back to games</button>
+    <span className="phone-rotate-icon" aria-hidden="true">↻</span><h1>A little more room<br />to play.</h1><p>Turn your phone sideways.<br />Your game will wait right here.</p><button onClick={() => appStore.getState().exitGame()}>Back to games</button>
   </div>;
 }
