@@ -57,9 +57,9 @@ export function Tile({ game, index, focused, launching, shakeAt, onHover, onSele
           <meshBasicMaterial color={colors.lightGrey} transparent opacity={0.45} depthWrite={false} toneMapped={false} />
         </mesh>
       )}
-      <Text font={fonts.medium} fontSize={34} color={soon ? colors.muted : colors.ink} anchorX="center" anchorY="middle"
+      <Text font={fonts.medium} fontSize={game.title.length > 24 ? 27 : 34} maxWidth={340} textAlign="center" lineHeight={1.05} color={soon ? colors.muted : colors.ink} anchorX="center" anchorY="middle"
         position={[0, -135, 320]}>
-        {game.title}
+        {game.title.includes(': ') ? game.title.replace(': ', ':\n') : game.title}
       </Text>
       <mesh position={[0, -170, 320]} visible={focused}>
         <planeGeometry args={[90, 6]} />

@@ -48,13 +48,15 @@ The fourth tile launches **Carbon Rails**, a globe railway game against a comput
 
 The fifth tile launches **Convention Hall**, a first-person badge-scanning scavenger hunt through 20 fictional railroad exhibitors. Follow company clues, scan attendees green, and stop bad-breath vendors. See [`launchboard/CONVENTION-HALL.md`](launchboard/CONVENTION-HALL.md).
 
-All five games have local high-score leaderboards connected to first-and-last-name forms. Open **High scores** from the launchboard. Scores persist in the same browser and site origin; they do not sync across devices. See [`launchboard/LEADERBOARDS.md`](launchboard/LEADERBOARDS.md).
+The sixth tile launches **Jumper 3: The Legend of Atom**, a three-chapter platformer starring Atom the beaver. Recover the stolen ignition seals from the hooded Order of the Hollow Ember using hardhat armor, bouncing sparks, and an Atom Core shield. Keyboard, controller, and simultaneous touch controls are included. See [`launchboard/JUMPER-3.md`](launchboard/JUMPER-3.md).
+
+All six games have local high-score leaderboards connected to first-and-last-name forms. Open **High scores** from the launchboard. Scores persist in the same browser and site origin; they do not sync across devices. See [`launchboard/LEADERBOARDS.md`](launchboard/LEADERBOARDS.md).
 
 Prize submissions use the configured ITD Formspree form by default. To override it locally, set `VITE_FORMSPREE_ENDPOINT` in `launchboard/.env.local`; for Netlify, set the site environment variable of the same name. The form confirms receipt only after Formspree accepts the submission.
 
-The board's grid is fixed at 6 tiles: `BASE_GAMES` in `launchboard/src/games/registry.ts` always has exactly `GRID_COUNT` (6) entries, so adding a game means replacing one of the existing `soon(...)` "Coming soon..." slots rather than appending a 7th. Change that slot to `status: 'playable'` with a `load: () => import('./my-game/MyGame')`. The component receives `{ ctx }` (`exit()`, `input.subscribe()`, `tube.pulse()`, `quality`) and renders R3F content in the 1920×1080 centered content scene.
+The board's grid is fixed at six tiles, all now playable. To add another game, replace an existing entry in `launchboard/src/games/registry.ts` or expand the grid and its layout together. Each game uses `status: 'playable'` with a lazy `load` function. Its component receives `{ ctx }` (`exit()`, `input.subscribe()`, `tube.pulse()`, `quality`) and renders R3F content in the centered 1920 x 1080 content scene.
 
-CI runs the test suite (`npm test`, see `.github/workflows/deploy.yml`), and `tests/registry.test.ts` asserts specifics of the current placeholder slots (illustrations, titles, count) — update that test to match whichever slot you replaced, or the build will fail.
+CI runs the test suite (`npm test`, see `.github/workflows/deploy.yml`), and `tests/registry.test.ts` asserts specifics of the six playable entries (illustrations, titles, count) — update that test to match whichever slot you replaced, or the build will fail.
 
 ## Fonts
 

@@ -23,7 +23,7 @@ async function boardReady(page: Page, query: string) {
   await expect.poll(async () => (await state(page)).screen).toBe('board');
 }
 
-test('attract → board → launch test pattern → exit → placeholder → idle back to attract', async ({ page }) => {
+test('attract → board → launch test pattern → exit → final tile → idle back to attract', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
 
@@ -47,8 +47,10 @@ test('attract → board → launch test pattern → exit → placeholder → idl
   await page.keyboard.press('ArrowDown');
   await expect.poll(async () => (await state(page)).focusIndex).toBe(5);
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(600);
-  expect((await state(page))).toMatchObject({ screen: 'board', focusIndex: 5 });
+  await expect.poll(async () => (await state(page)).screen, { timeout: GAME_ENTER_MS }).toBe('game');
+  await page.getByRole('button', { name: 'Start chapter' }).waitFor();
+  await page.keyboard.press('Escape');
+  await expect.poll(async () => (await state(page)).screen).toBe('board');
 
   await expect.poll(async () => (await state(page)).screen, { timeout: 8000 }).toBe('attract');
   expect(errors).toEqual([]);

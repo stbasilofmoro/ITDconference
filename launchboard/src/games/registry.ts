@@ -5,17 +5,13 @@ export type { GameDefinition, GameContext, GameComponent, Accent, IllustrationId
 export const TEST_PATTERN_ID = 'test-pattern';
 export const GRID_COUNT = 6;
 
-const soon = (id: string, illustration: GameDefinition['illustration'], accent: GameDefinition['accent']): GameDefinition => ({
-  id, title: 'Coming soon...', accent, illustration, status: 'coming-soon',
-});
-
 export const BASE_GAMES: GameDefinition[] = [
   { id: 'beaver-crossing', title: 'Beaver Crossing', accent: 'orange', illustration: 'beaver', status: 'playable', load: () => import('./beaver-crossing/BeaverCrossing') },
   { id: 'carbon-sort', title: 'Carbon Sort', accent: 'green', illustration: 'materials', status: 'playable', load: () => import('./carbon-sort/CarbonSort') },
   { id: 'kiln-keeper', title: 'Kiln Keeper', accent: 'pink', illustration: 'rotaryKiln', status: 'playable', load: () => import('./kiln-keeper/KilnKeeper') },
   { id: 'carbon-rails', title: 'Carbon Rails', accent: 'green', illustration: 'globe', status: 'playable', load: () => import('./carbon-rails/CarbonRails') },
   { id: 'convention-hall', title: 'Convention Hall', accent: 'orange', illustration: 'badgeScanner', status: 'playable', load: () => import('./convention-hall/ConventionHall') },
-  soon('slot-6', 'kiln', 'pink'),
+  { id: 'jumper-3', title: 'Jumper 3: The Legend of Atom', accent: 'pink', illustration: 'atom', status: 'playable', load: () => import('./jumper-3/Jumper3') },
 ];
 
 const TEST_PATTERN: GameDefinition = {

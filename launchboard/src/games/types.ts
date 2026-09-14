@@ -3,7 +3,7 @@ import type { InputBus } from '../ui/inputBus';
 import type { QualityPreset } from '../state/store';
 
 export type Accent = 'orange' | 'pink' | 'green';
-export type IllustrationId = 'tieStack' | 'train' | 'shredder' | 'kiln' | 'crossing' | 'globe' | 'beaver' | 'materials' | 'rotaryKiln' | 'badgeScanner';
+export type IllustrationId = 'tieStack' | 'train' | 'shredder' | 'kiln' | 'crossing' | 'globe' | 'beaver' | 'materials' | 'rotaryKiln' | 'badgeScanner' | 'atom';
 export type PulseKind = 'boot' | 'channel' | 'static' | 'flash' | 'roll';
 
 export type GameContext = {

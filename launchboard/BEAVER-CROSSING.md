@@ -1,6 +1,6 @@
 # Beaver Crossing
 
-The first launchboard tile is a five-level, original beaver crossing game. Carbon Sort, Kiln Keeper, Carbon Rails, and Convention Hall occupy the next four tiles; one slot remains available for a future game.
+The first launchboard tile is a five-level, original beaver crossing game. Carbon Sort, Kiln Keeper, Carbon Rails, Convention Hall, and Jumper 3 fill the remaining five tiles.
 
 ## Play
 

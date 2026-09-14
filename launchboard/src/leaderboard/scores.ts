@@ -1,6 +1,6 @@
 import { createStore } from 'zustand';
 import { FORMSPREE_ENDPOINT, validEndpoint } from '../games/beaver-crossing/claims';
-export const GAME_NAMES = { 'beaver-crossing': 'Beaver Crossing', 'carbon-sort': 'Carbon Sort', 'kiln-keeper': 'Kiln Keeper', 'carbon-rails': 'Carbon Rails', 'convention-hall': 'Convention Hall' } as const;
+export const GAME_NAMES = { 'beaver-crossing': 'Beaver Crossing', 'carbon-sort': 'Carbon Sort', 'kiln-keeper': 'Kiln Keeper', 'carbon-rails': 'Carbon Rails', 'convention-hall': 'Convention Hall', 'jumper-3': 'Jumper 3: The Legend of Atom' } as const;
 export type GameId = keyof typeof GAME_NAMES;
 export type Result = { id: string; game: GameId; score: number; detail: string };
 export type Score = Result & { firstName: string; lastName: string; date: string };
