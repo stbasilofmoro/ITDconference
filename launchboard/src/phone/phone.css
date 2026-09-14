@@ -44,3 +44,22 @@ body[data-phone=true] .hall-touch-header{pointer-events:none}
 .phone-jumper-jump{inset:0 0 0 45%}
 body[data-phone=true][data-phone-game=true] .booth-audio{left:auto;right:max(12px,env(safe-area-inset-right));transform:none}
 body[data-phone=true][data-phone-game=true] .booth-audio-panel{left:auto;right:0;transform:none}
+
+/* Cover native menus and game views with the same phosphor texture as the
+   booth's CSS tube. Fixed glass takes no layout space and never catches a touch. */
+body[data-phone=true]::after{
+  content:'';position:fixed;inset:0;z-index:10000;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 28% 18%,#ffffff12,transparent 55%),
+    repeating-linear-gradient(0deg,#00000022 0 1px,transparent 1px 3px),
+    repeating-linear-gradient(90deg,#ff00000c 0 1px,#00ff000c 1px 2px,#0000ff0c 2px 3px);
+  box-shadow:inset 0 0 12vmin #00000050,inset 0 0 2vmin #00000018;
+}
+body[data-phone=true]::before{
+  content:'';position:fixed;top:0;left:0;right:0;height:22dvh;z-index:9999;pointer-events:none;
+  background:linear-gradient(transparent,#ffffff09 45%,#ffffff04 65%,transparent);
+  will-change:transform;
+  animation:phone-crt-refresh 12s linear infinite;
+}
+@keyframes phone-crt-refresh{from{transform:translateY(-100%)}to{transform:translateY(100dvh)}}
+@media(prefers-reduced-motion:reduce){body[data-phone=true]::before{animation:none;background:none;will-change:auto}}

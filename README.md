@@ -40,7 +40,7 @@ All six games include soft sound effects and an original lo-fi soundtrack. Audio
 
 Open the same deployed site in your phone's browser, including Safari on iPhone or Chrome on Android. Phones automatically get a portrait-friendly welcome screen and game picker. Choose a game, then turn the phone sideways to play. Turning upright holds gameplay; Convention Hall and Jumper also offer a Resume button when you turn back.
 
-The phone view uses gesture controls with the gameplay buttons hidden, cropped game views, and a clear display without the booth's CRT bezel or effects. A small Menu opens options; Carbon Rails keeps card and route choices behind Routes & cards. All six games, music, prize forms, local high scores, and the five-minute idle reset remain available. Scores stay in the browser on that device.
+The phone view uses gesture controls with the gameplay buttons hidden, cropped game views, and a full-screen CRT overlay with scanlines and glass shading. A small Menu opens options; Carbon Rails keeps card and route choices behind Routes & cards. All six games, music, prize forms, local high scores, and the five-minute idle reset remain available. Scores stay in the browser on that device.
 
 No separate app download is needed. See [`launchboard/MOBILE.md`](launchboard/MOBILE.md) for controls and validation.
 

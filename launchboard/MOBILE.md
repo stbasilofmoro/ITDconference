@@ -19,7 +19,7 @@ Sound starts after interaction. Music and effects settings persist on this devic
 
 ## Rendering
 
-Phone gameplay removes the CRT frame and post-processing, uses smaller render targets, and crops the existing game scenes instead of shrinking kiosk sidebars. The content camera retains its explicit crop and the same raycast mapping. The game uses the full landscape viewport with display-cutout insets; native overlays respect CSS safe-area insets. A single graphics canvas survives game changes, with rendering stopped while the picker is visible. Phones request a wake lock where supported without forcing fullscreen.
+Phone gameplay keeps a lightweight CRT glass overlay across the welcome screen, menus, and games: scanlines, RGB phosphor texture, edge shading, and a gentle refresh band. The overlay ignores touches and occupies no layout space. Reduced-motion settings disable the moving band. Smaller render targets and cropped game scenes preserve room for play without the large booth frame or extra GPU post-processing passes. The content camera retains its explicit crop and the same raycast mapping. The game uses the full landscape viewport with display-cutout insets; native overlays respect CSS safe-area insets. A single graphics canvas survives game changes, with rendering stopped while the picker is visible. Phones request a wake lock where supported without forcing fullscreen.
 
 ## Validation
 
