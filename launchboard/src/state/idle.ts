@@ -8,6 +8,6 @@ export function nextScreenForIdle(
 ): Screen | null {
   const idle = now - lastInputAt;
   if (screen === 'board' && idle >= cfg.idleToAttractMs) return 'attract';
-  if (screen === 'game' && idle >= cfg.gameIdleExitMs) return 'board';
+  if (screen === 'game' && idle >= cfg.gameIdleExitMs) return 'attract';
   return null;
 }

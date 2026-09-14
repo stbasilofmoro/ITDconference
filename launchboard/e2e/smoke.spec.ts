@@ -66,18 +66,21 @@ test('a game that fails to load shows SIGNAL LOST and returns to the board', asy
   await expect.poll(async () => (await state(page)).screen, { timeout: 9000 }).toBe('board');
 });
 
-test('a game with no input returns to the board', async ({ page }) => {
+test('a game with no input returns directly to touch to play', async ({ page }) => {
   // A larger gameidle than the other specs use: `lastInputAt` is stamped at the original
   // keypress (before Board even subscribes), not when the game screen actually appears, so
   // under this environment's render-thread contention (see GAME_ENTER_MS above) a very short
   // idle window can already have elapsed by the time 'game' is entered, and the poll below
-  // could race the almost-immediate idle-exit back to 'board' without ever observing 'game'.
+  // could race the almost-immediate idle-exit back to 'attract' without ever observing 'game'.
   // 6s comfortably clears GAME_ENTER_MS's worst observed entry delay while still keeping the
   // idle-exit itself well inside the second poll's budget.
   await boardReady(page, '&gameidle=6000');
   await page.keyboard.press('Enter');
   await expect.poll(async () => (await state(page)).screen, { timeout: GAME_ENTER_MS }).toBe('game');
-  await expect.poll(async () => (await state(page)).screen, { timeout: 12000 }).toBe('board');
+  await expect.poll(async () => (await state(page)).screen, { timeout: 12000 }).toBe('attract');
+  expect((await state(page)).activeGameId).toBeNull();
+  await page.mouse.click(8, 8);
+  await expect.poll(async () => (await state(page)).screen).toBe('board');
 });
 
 test('staff shortcut cycles into the CSS fallback and back', async ({ page }) => {

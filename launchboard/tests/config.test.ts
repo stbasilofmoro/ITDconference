@@ -7,8 +7,8 @@ describe('config', () => {
   it('has the spec defaults', () => {
     expect(config.title).toBe('Have Some Fun At AREMA');
     expect(config.headlineLines).toEqual(['Have', 'Some Fun', 'At AREMA']);
-    expect(config.idleToAttractMs).toBe(60000);
-    expect(config.gameIdleExitMs).toBe(120000);
+    expect(config.idleToAttractMs).toBe(300000);
+    expect(config.gameIdleExitMs).toBe(300000);
     expect(config.boothNumber).toBe('');
   });
 
@@ -31,7 +31,7 @@ describe('config', () => {
   it('merges overrides into effective config', () => {
     const c = effectiveConfig('?idle=2000');
     expect(c.idleToAttractMs).toBe(2000);
-    expect(c.gameIdleExitMs).toBe(120000);
+    expect(c.gameIdleExitMs).toBe(300000);
   });
 });
 

@@ -30,6 +30,8 @@ GitHub Actions runs unit tests and a production build. Netlify handles deploymen
 2. Launch Chrome in kiosk mode: `chrome --kiosk --autoplay-policy=no-user-gesture-required https://YOUR-SITE.netlify.app/`
 3. Touch the screen once to enter fullscreen and keep the display awake.
 
+After five minutes without interaction, the dashboard or any game returns directly to **Touch to play**. Each interaction restarts the timer.
+
 Staff shortcuts: **Ctrl+Shift+Q** cycles the quality preset (Pro → Standard → Safe → Auto, remembered on this machine); **Ctrl+Shift+D** toggles the debug panel.
 
 All six games include soft sound effects and an original lo-fi soundtrack. Audio starts after a tap or keypress. Use **Sound** at the bottom center to mute or adjust music and effects separately; settings stay on this device. The idle screen and hidden tabs stay quiet. See [`launchboard/AUDIO.md`](launchboard/AUDIO.md).
