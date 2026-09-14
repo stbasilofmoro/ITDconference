@@ -18,20 +18,26 @@ import { LEFT_X } from '../ui/layout';
 function Yard() {
   const drift = useRef<Group>(null!);
   const train = useRef<Group>(null!);
-  useFrame(({ clock }) => {
+  const travel = useRef(0);
+  useFrame(({ clock }, dt) => {
     const t = clock.elapsedTime;
     drift.current.position.set(260 + Math.sin(t * 0.05) * 60, -40 + Math.cos(t * 0.04) * 30, 0);
-    train.current.position.x = ((t * 3) % 80) - 40;
+    travel.current = (travel.current + Math.min(dt, 0.1) * 7.5) % 180;
+    train.current.position.x = travel.current - 90;
   });
   return (
     <group ref={drift}>
       <Iso scale={17}>
-        <Track length={70} />
-        <group ref={train} position={[0, 0.3, 0]}><Train active /></group>
+        {/* Steeper rails cross both vertical edges, keeping the prize copy clear.
+            The whole train clears the screen before wrapping to the top. */}
+        <group rotation={[0, -Math.PI / 6, 0]}>
+          <Track length={210} />
+          <group ref={train} position={[-90, 0.3, 0]}><Train /></group>
+        </group>
         <group position={[-10, 0, -15]}><Shredder active /></group>
         <group position={[4, 0, -20]} rotation={[0, Math.PI / 2, 0]} scale={2.5}><RotaryKilnDisplay /></group>
         <group position={[-3, 0, 5]}><CrossingSignal active /></group>
-        <group position={[18, 0, 9]}><TieStack /></group>
+        <group position={[30, 0, 9]}><TieStack /></group>
       </Iso>
     </group>
   );
