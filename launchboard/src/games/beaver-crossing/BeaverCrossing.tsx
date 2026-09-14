@@ -74,9 +74,9 @@ export default function BeaverCrossing({ ctx }: { ctx: GameContext }) {
   const panel = view.phase !== 'playing';
   const result = { id: scoreId.current, game: 'beaver-crossing' as const, score: Math.max(0, (run.level * FINISH_ROW + run.bestRow) * 100 - run.attempts * 10), detail: `${run.phase === 'won' ? 5 : run.level} levels complete / ${run.attempts} retries` };
   return <>
-    {!claimOpen && <PhonePortal><PhonePanel title="Beaver Crossing" status={`Level ${view.level + 1} / 5 · ${level.title}`} modal={panel} exit={ctx.exit} result={view.phase === 'won' || view.phase === 'hit' ? result : undefined}>
+    {!claimOpen && <PhonePortal><PhonePanel gestures={{ hint: "Swipe in any direction to hop. Tap to hop forward.", swipe: act, tap: () => act("up") }} title="Beaver Crossing" status={`Level ${view.level + 1} / 5 · ${level.title}`} modal={panel} exit={ctx.exit} result={view.phase === 'won' || view.phase === 'hit' ? result : undefined}>
       {panel ? <><p>{view.phase === 'won' ? 'All five crossings complete! ITD will send you delicious maple syrup for your success.' : view.phase === 'hit' ? HIT_COPY[run.hitKind ?? 'train'] : view.phase === 'cleared' ? 'Safe and sound. Ready for the next crossing?' : level.story}</p>
-        <p>Hop to the green finish row. Tap an arrow for each hop; watch for trains, crews, and flying ties.</p>
+        <p>Hop to the green finish row. Watch for trains, crews, and flying ties.</p>
         <PhoneButton onPress={() => act('select')}>{view.phase === 'won' ? 'Claim my maple syrup' : view.phase === 'hit' ? 'Try this level again' : view.phase === 'cleared' ? 'Next crossing' : 'Start crossing'}</PhoneButton>
       </> : <><p>{view.bestRow} / {FINISH_ROW} rows · {view.attempts} retries</p><div className="phone-dpad"><PhoneButton onPress={() => act('up')}>↑</PhoneButton><PhoneButton onPress={() => act('left')}>←</PhoneButton><PhoneButton onPress={() => act('down')}>↓</PhoneButton><PhoneButton onPress={() => act('right')}>→</PhoneButton></div></>}
     </PhonePanel></PhonePortal>}

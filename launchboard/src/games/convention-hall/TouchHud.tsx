@@ -4,7 +4,7 @@ import { useStore } from 'zustand';
 import { fonts } from '../../brand';
 import { appStore } from '../../state/store';
 import { scoreStore, showScores, type Result } from '../../leaderboard/scores';
-import { displayLayout as computeLayout } from '../../phone/viewport';
+import { displayLayout as computeLayout, usePhone } from '../../phone/viewport';
 import { aim, aimedPerson, CONTACT_GOAL, currentTarget, SHIFT_SECONDS, type Run } from './engine';
 import { COMPANIES } from './companies';
 import { companyTexture } from './logos';
@@ -29,6 +29,8 @@ function Clue({ company }: { company: number }) {
 }
 
 function TouchHud({ run, touch, result, select, pause, exit, clear }: Props) {
+  const phone = usePhone();
+  const tapStart = useRef<{ id: number; x: number; y: number; moved: boolean } | null>(null);
   const scoresOpen = useStore(scoreStore, (s) => s.open);
   const [viewport, setViewport] = useState(() => ({ width: innerWidth, height: innerHeight }));
   const [, redrawStick] = useState(0);
@@ -64,13 +66,16 @@ function TouchHud({ run, touch, result, select, pause, exit, clear }: Props) {
   const company = currentTarget(run) ?? run.targets[run.targets.length - 1];
   const target = aimedPerson(run);
   const update = (e: PointerEvent) => {
+    const p = tapStart.current;
+    if (p?.id === e.pointerId && Math.hypot(e.clientX - p.x, e.clientY - p.y) > 12) p.moved = true;
     stop(e); const delta = touch.update(e.pointerId, e.clientX, e.clientY);
     aim(run, delta.yaw, delta.pitch); redrawStick((n) => n + 1);
   };
   const begin = (e: PointerEvent<HTMLDivElement>, kind: 'move' | 'look') => {
     stop(e); if (!enabled) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const accepted = kind === 'move' ? touch.beginMove(e.pointerId, rect.x + rect.width / 2, rect.y + rect.height / 2, rect.width * 0.36) : touch.beginLook(e.pointerId, e.clientX, e.clientY);
+    const accepted = kind === 'move' ? touch.beginMove(e.pointerId, phone ? e.clientX : rect.x + rect.width / 2, phone ? e.clientY : rect.y + rect.height / 2, phone ? 45 : rect.width * 0.36) : touch.beginLook(e.pointerId, e.clientX, e.clientY);
+    if (phone && kind === 'look' && accepted) tapStart.current = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: false };
     if (accepted) { e.currentTarget.setPointerCapture(e.pointerId); update(e); }
   };
   return <div className={`hall-touch${modal ? ' hall-touch-modal' : ''}`} onContextMenu={(e) => e.preventDefault()} onPointerDownCapture={markInput}>
@@ -81,7 +86,7 @@ function TouchHud({ run, touch, result, select, pause, exit, clear }: Props) {
       {run.paused ? <p>The clock and vendors are paused. Settle your thumbs, then resume.</p> : finished ? <><p>You found {run.found} of {CONTACT_GOAL} company contacts and scanned {run.scanCount} badges.</p><p className="hall-final-score">{run.score.toLocaleString()} points</p><p>{run.phase === 'won' ? 'All five companies found! Time and fresh-air bonuses included.' : 'Follow the company emblems. Scan pushy vendors before they breathe on you.'}</p></> : <>
         <p>Follow five company clues through the exhibit hall. Scan AREMA badges to reveal employers and turn attendees green.</p>
         <Clue company={company} />
-        <p><strong>Left thumb: move. Right thumb: look.</strong> Tap Scan while moving or aiming. Scan pushy vendors before their bad-breath clouds reach you.</p>
+        <p><strong>Left thumb: drag to move. Right thumb: drag to look.</strong> {phone ? 'Tap the right side to scan. Both thumbs work together.' : 'Tap Scan while moving or aiming.'} Scan pushy vendors before their bad-breath clouds reach you.</p>
         <p className="hall-muted">Three minutes. Four fresh-air bars. A fresh set of companies each run.</p>
       </>}
       <div className="hall-menu-actions"><TouchButton onPress={select}>{run.paused ? 'Resume exploring' : finished ? 'Try a fresh hall' : 'Enter the hall'}</TouchButton>
@@ -89,7 +94,8 @@ function TouchHud({ run, touch, result, select, pause, exit, clear }: Props) {
         <TouchButton className="hall-secondary" onPress={exit}>Launchboard</TouchButton></div>
       <small className="hall-fiction">20 fictional exhibitors / Simulated badges</small>
     </section> : <>
-      <div className="hall-look-area" role="region" aria-label="Look area" onPointerDown={(e) => begin(e, 'look')} onPointerMove={update} />
+      <div className="hall-look-area" role="region" aria-label="Look area" onPointerDown={(e) => begin(e, 'look')} onPointerMove={update}
+        onPointerCancel={() => { tapStart.current = null; }} onPointerUp={(e) => { const p = tapStart.current; tapStart.current = null; if (phone && p?.id === e.pointerId && !p.moved && Math.hypot(e.clientX - p.x, e.clientY - p.y) <= 12) select(); }} />
       <header className="hall-touch-header"><div className="hall-clue-card"><Clue company={company} /><span>{run.found} / {CONTACT_GOAL} contacts found</span></div>
         <div className="hall-touch-status"><small>TIME / FRESH AIR</small><strong>{Math.max(0, Math.ceil(SHIFT_SECONDS - run.elapsed))}s</strong>
           <div className="hall-air" aria-label={`${run.health}% fresh air`}>{[0, 1, 2, 3].map((i) => <i key={i} className={run.health > i * 25 ? 'full' : ''} />)}</div><span>{run.score} points</span></div>
@@ -99,7 +105,7 @@ function TouchHud({ run, touch, result, select, pause, exit, clear }: Props) {
       <div className="hall-movement"><span>MOVE</span><div className="hall-joystick" role="group" aria-label="Movement joystick" onPointerDown={(e) => begin(e, 'move')} onPointerMove={update}>
         <span className="hall-joystick-cross" /><span className="hall-joystick-thumb" style={{ transform: 'translate(-50%, -50%)', left: `${50 + touch.knobX * 36}%`, top: `${50 + touch.knobY * 36}%` }} />
       </div></div>
-      <div className="hall-touch-actions"><span>DRAG THE VIEW TO LOOK</span><TouchButton className="hall-scan" onPress={select}>Scan</TouchButton><div><TouchButton onPress={pause}>Pause</TouchButton><TouchButton onPress={exit}>Exit</TouchButton></div></div>
+      {phone ? <><button className="phone-menu-toggle" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); appStore.getState().markInput(performance.now()); pause(); }} onClick={(e) => { if (e.detail === 0) pause(); }}>Menu</button><div className="phone-gesture-hint">Left: drag to move. Right: drag to look, tap to scan.</div></> : <div className="hall-touch-actions"><span>DRAG THE VIEW TO LOOK</span><TouchButton className="hall-scan" onPress={select}>Scan</TouchButton><div><TouchButton onPress={pause}>Pause</TouchButton><TouchButton onPress={exit}>Exit</TouchButton></div></div>}
       <p className="hall-touch-tip">Move, look, and scan together.<br />{viewport.height > viewport.width ? 'Turn your iPad sideways for a wider view.' : 'Scan a pushy vendor to stop their breath.'}</p>
       {run.hitTime > 0 && <div className="hall-touch-hit" style={{ opacity: run.hitTime * 0.35 }} />}
     </>}

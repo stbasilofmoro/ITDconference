@@ -63,8 +63,13 @@ export default function App() {
     <>
       {phone.enabled && <style>{`@font-face{font-family:PhoneBarlow;src:url('${fonts.medium}')}@font-face{font-family:PhoneBarlow;src:url('${fonts.semibold}');font-weight:600}`}</style>}
       {phone.enabled && screen !== 'game' && <PhoneHome games={games} />}
-      {!fallback && (!phone.enabled || screen === 'game') && (
-        <Canvas orthographic flat dpr={[1, 2]} camera={{ position: [0, 0, 1000], zoom: 1, near: 0.1, far: 5000 }}
+      {!fallback && (
+        // Reuse the mobile context across games: disposing a Canvas fires a delayed
+        // context-lost event that otherwise sends the next game back to the picker.
+        // The hidden picker canvas has no scene and no running render loop.
+        <Canvas orthographic flat dpr={phone.enabled ? 1 : [1, 2]} camera={{ position: [0, 0, 1000], zoom: 1, near: 0.1, far: 5000 }}
+          frameloop={phone.enabled && screen !== 'game' ? 'never' : 'always'}
+          style={phone.enabled && screen !== 'game' ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
           onCreated={({ gl }) => {
             const canvas = gl.domElement;
@@ -81,7 +86,7 @@ export default function App() {
           <Monitor>
             {/* Unmount screens while the context is lost so only the CSS fallback handles input.
                 StudioRig stays out of the gallery path — Gallery renders its own StudioRig (Task 13). */}
-            {!contextLost && (params.has('gallery') ? <Gallery /> : (
+            {!contextLost && (!phone.enabled || screen === 'game') && (params.has('gallery') ? <Gallery /> : (
               <>
                 <StudioRig />
                 {/* A suspended <Text> (e.g. a cold font load) only unmounts this boundary,

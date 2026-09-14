@@ -3,6 +3,14 @@ import './hooks';
 
 test.use({ ...devices['iPhone 13'], defaultBrowserType: 'chromium' });
 
+async function swipe(page: Page, from: [number, number], to: [number, number], cancel = false) {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: from[0], y: from[1], id: 1 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: to[0], y: to[1], id: 1 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: cancel ? 'touchCancel' : 'touchEnd', touchPoints: [] });
+  await cdp.detach();
+}
+
 async function home(page: Page) {
   await page.goto('/?e2e&beaver');
   await expect(page.getByRole('button', { name: 'TOUCH TO PLAY' })).toBeVisible();
@@ -30,11 +38,11 @@ test('portrait picker, high scores, sound, and five-minute reset fit the phone',
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: 'test-results/phone-welcome.png' });
 });
-test('beaver native hopping, portrait hold, and idle exit', async ({ page }) => {
+test('beaver gesture hopping, portrait hold, and idle exit', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await launch(page, 'Beaver Crossing');
   await page.getByRole('button', { name: 'Start crossing', exact: true }).tap();
-  await page.getByRole('button', { name: '↑', exact: true }).tap();
+  await swipe(page, [500, 240], [500, 170]);
   await expect.poll(() => page.evaluate(() => window.__beaver!.getState().row)).toBe(1);
   await page.screenshot({ path: 'test-results/phone-beaver.png' });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -47,31 +55,38 @@ test('beaver native hopping, portrait hold, and idle exit', async ({ page }) => 
   await expect(page.locator('[data-phone-hud]')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
-test('carbon sort native movement, rotation, drop, and pause', async ({ page }) => {
+test('carbon sort gesture movement, rotation, drop, and pause', async ({ page }) => {
   await launch(page, 'Carbon Sort');
   await page.getByRole('button', { name: 'Start sorting', exact: true }).tap();
   const x = await page.evaluate(() => window.__carbonSort!.getState().active!.x);
-  await page.getByRole('button', { name: 'Left', exact: true }).tap();
+  await expect(page.getByRole('button', { name: 'Left', exact: true })).toBeHidden();
+  await swipe(page, [500, 210], [440, 210]);
   expect(await page.evaluate(() => window.__carbonSort!.getState().active!.x)).toBe(x - 1);
   const direction = await page.evaluate(() => window.__carbonSort!.getState().active!.direction);
-  await page.getByRole('button', { name: 'Rotate', exact: true }).tap();
+  await page.touchscreen.tap(500, 210);
   expect(await page.evaluate(() => window.__carbonSort!.getState().active!.direction)).not.toBe(direction);
-  await page.getByRole('button', { name: 'Drop', exact: true }).tap();
+  await swipe(page, [500, 170], [500, 250]);
+  await page.getByRole('button', { name: 'Menu', exact: true }).tap();
+  const heldTime = await page.evaluate(() => window.__carbonSort!.getState().fallTimer);
+  await page.waitForTimeout(200);
+  expect(await page.evaluate(() => window.__carbonSort!.getState().fallTimer)).toBe(heldTime);
   await page.getByRole('button', { name: 'Pause', exact: true }).tap();
   await expect(page.getByRole('button', { name: 'Resume sorting' })).toBeVisible();
   await page.getByRole('button', { name: 'Resume sorting' }).tap();
   await page.screenshot({ path: 'test-results/phone-sort.png' });
 });
-test('kiln phone slider controls the actual conveyor', async ({ page }) => {
+test('kiln phone gestures control the actual conveyor', async ({ page }) => {
   await launch(page, 'Kiln Keeper');
   await page.getByRole('button', { name: 'Start the conveyor', exact: true }).tap();
-  await page.getByRole('slider', { name: 'Conveyor speed' }).focus();
-  await page.keyboard.press('End');
-  await expect.poll(() => page.evaluate(() => window.__kilnKeeper!.getState().feed)).toBe(1);
-  await page.getByRole('button', { name: 'Stop feed', exact: true }).tap();
-  await expect.poll(() => page.evaluate(() => window.__kilnKeeper!.getState().feed)).toBe(0);
+  await expect(page.getByRole('slider', { name: 'Conveyor speed' })).toBeHidden();
+  await swipe(page, [500, 210], [830, 210]);
+  await expect.poll(() => page.evaluate(() => window.__kilnKeeper!.getState().feed)).toBeGreaterThan(.98);
+  await swipe(page, [500, 210], [1, 210]);
+  await expect.poll(() => page.evaluate(() => window.__kilnKeeper!.getState().feed)).toBeLessThan(.01);
   const fed = await page.evaluate(() => window.__kilnKeeper!.getState().fed);
-  await page.getByRole('button', { name: 'Drop wood', exact: true }).tap();
+  await swipe(page, [500, 210], [500, 210], true);
+  expect(await page.evaluate(() => window.__kilnKeeper!.getState().fed)).toBe(fed);
+  await page.touchscreen.tap(500, 210);
   await expect.poll(() => page.evaluate(() => window.__kilnKeeper!.getState().fed)).toBeGreaterThan(fed);
   await page.screenshot({ path: 'test-results/phone-kiln.png' });
 });
@@ -81,6 +96,8 @@ test('rail globe keeps readable ticket, route, card and payment controls', async
   await expect(page.getByRole('checkbox')).toHaveCount(3);
   await page.getByRole('checkbox').first().uncheck();
   await page.getByRole('button', { name: 'Confirm destinations', exact: true }).tap();
+  await expect(page.getByRole('combobox', { name: 'Region', exact: true })).toBeHidden();
+  await page.getByRole('button', { name: 'Routes & cards', exact: true }).tap();
   await page.getByRole('combobox', { name: 'Region', exact: true }).selectOption('1');
   await expect(page.getByRole('combobox', { name: 'Railway', exact: true })).toHaveValue('12');
   await page.screenshot({ path: 'test-results/phone-rails.png' });
@@ -99,32 +116,37 @@ test('Convention Hall scanner and simultaneous touch controls fit a small iPhone
   await launch(page, 'Convention Hall');
   await page.setViewportSize({ width: 667, height: 375 });
   await page.getByRole('button', { name: 'Enter the hall', exact: true }).tap();
-  await page.getByRole('button', { name: 'Scan', exact: true }).tap();
+  await expect(page.getByRole('button', { name: 'Scan', exact: true })).toBeHidden();
+  await page.touchscreen.tap(500, 200);
   await expect.poll(() => page.evaluate(() => window.__conventionHall!.getState().found)).toBe(1);
-  const stick = await page.getByRole('group', { name: 'Movement joystick' }).boundingBox();
-  const scan = await page.getByRole('button', { name: 'Scan', exact: true }).boundingBox();
-  expect(stick!.width).toBeGreaterThanOrEqual(90); expect(scan!.height).toBeGreaterThanOrEqual(44);
   const cdp = await context.newCDPSession(page);
   const before = await page.evaluate(() => window.__conventionHall!.getState().z);
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: stick!.x + stick!.width / 2, y: stick!.y + 10, id: 1 }, { x: 350, y: 180, id: 2 }] });
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: stick!.x + stick!.width / 2, y: stick!.y + 10, id: 1 }, { x: 380, y: 180, id: 2 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 150, y: 230, id: 1 }, { x: 350, y: 180, id: 2 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 150, y: 170, id: 1 }, { x: 380, y: 180, id: 2 }] });
   await expect.poll(() => page.evaluate(() => window.__conventionHall!.getState().z)).toBeLessThan(before);
   expect(await page.evaluate(() => window.__conventionHall!.getState().yaw)).toBeGreaterThan(0);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await page.getByRole('button', { name: 'Menu', exact: true }).tap();
+  await expect(page.getByRole('button', { name: 'Resume exploring' })).toBeVisible();
+  await page.getByRole('button', { name: 'Resume exploring' }).tap();
   await page.screenshot({ path: 'test-results/phone-hall.png' });
 });
 test('Jumper simultaneous move and jump, release and orientation pause', async ({ page, context }) => {
   await launch(page, 'Jumper 3');
   await page.setViewportSize({ width: 667, height: 375 });
   await page.getByRole('button', { name: 'Start chapter', exact: true }).tap();
-  const right = await page.getByRole('button', { name: 'Right', exact: true }).boundingBox();
-  const jump = await page.getByRole('button', { name: 'Jump', exact: true }).boundingBox();
+  await expect(page.getByRole('button', { name: 'Jump', exact: true })).toBeHidden();
   const cdp = await context.newCDPSession(page);
   const before = await page.evaluate(() => window.__jumper3!.getState().x);
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: right!.x + right!.width / 2, y: right!.y + 20, id: 1 }, { x: jump!.x + jump!.width / 2, y: jump!.y + 20, id: 2 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 230, y: 230, id: 1 }, { x: 500, y: 230, id: 2 }] });
   await expect.poll(() => page.evaluate(() => window.__jumper3!.getState().x)).toBeGreaterThan(before);
   expect(await page.evaluate(() => window.__jumper3!.getState().y)).toBeGreaterThan(0);
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await page.evaluate(() => window.__jumper3!.setState({ power: 'spark', fireCooldown: 0 }));
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 500, y: 240, id: 3 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 500, y: 170, id: 3 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect.poll(() => page.evaluate(() => window.__jumper3!.getState().shots.filter(s => !s.evil).length)).toBeGreaterThan(0);
   await page.screenshot({ path: 'test-results/phone-jumper.png' });
   await page.setViewportSize({ width: 375, height: 667 });
   await expect(page.getByRole('dialog', { name: 'Turn your phone sideways' })).toBeVisible();
@@ -148,4 +170,24 @@ test('phone result submits a named score and keeps it after reload', async ({ pa
   await page.getByRole('button', { name: 'Carbon Sort', exact: true }).tap();
   await expect(page.locator('.score-list')).toContainText('Jamie Rail');
   await expect(page.locator('.score-list')).toContainText('7,654');
+});
+
+
+test('all six games launch in succession using the same mobile graphics canvas', async ({ page }) => {
+  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+  await home(page);
+  await page.setViewportSize({ width: 844, height: 390 });
+  const canvas = await page.locator('canvas').elementHandle();
+  for (const [name, start] of [['Beaver Crossing', 'Start crossing'], ['Carbon Sort', 'Start sorting'], ['Kiln Keeper', 'Start the conveyor'], ['Carbon Rails', 'Choose your first tickets'], ['Convention Hall', 'Enter the hall'], ['Jumper 3', 'Start chapter'], ['Carbon Sort', 'Start sorting']]) {
+    await page.locator('.phone-game').filter({ hasText: name }).tap();
+    await expect(page.getByRole('button', { name: start, exact: true })).toBeVisible();
+    await page.getByRole('button', { name: start, exact: true }).tap();
+    if (name === 'Carbon Rails') await page.getByRole('button', { name: 'Confirm destinations' }).tap();
+    await page.getByRole('button', { name: name === 'Carbon Rails' ? 'Routes & cards' : 'Menu', exact: true }).tap();
+    await page.getByRole('button', { name: name === 'Convention Hall' || name === 'Jumper 3' ? 'Launchboard' : 'Exit to games', exact: true }).tap();
+    await expect(page.locator('.phone-game')).toHaveCount(6);
+    expect(await canvas!.evaluate(node => node.isConnected)).toBe(true);
+    expect(await page.evaluate(() => window.__launchboard!.getState().contextLost)).toBe(false);
+  }
+  expect(errors).toEqual([]);
 });

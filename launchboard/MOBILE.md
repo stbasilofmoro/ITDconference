@@ -6,21 +6,23 @@ The welcome screen and game picker scroll in portrait or landscape. Games use la
 
 ## Controls
 
-- **Beaver Crossing:** one tap per hop on the four direction buttons. Native start, retry, level advance, and prize buttons.
-- **Carbon Sort:** Left, Right, Rotate, Lower, Drop, and Pause. The next pair, round, stock count, and score appear beside the enlarged chamber.
-- **Kiln Keeper:** drag the native conveyor slider; Drop wood, Stop feed, and Pause. The temperature and warning countdown remain readable beside the graph.
-- **Carbon Rails:** scroll the side panel for region, railway, payment color, cards, tickets, zoom, rules, and pause. Drag the globe to explore. Native ticket checkboxes support choosing exactly which destinations to keep.
-- **Convention Hall:** left thumb moves, right thumb looks, and Scan works alongside both. Controls, clues, status, and safe-area spacing adapt to narrow landscape screens.
-- **Jumper 3:** simultaneous Left/Right, Jump, and Blaster; Run toggle, Pause, and Exit. Holding Jump still controls jump height.
+During gameplay, phones use gestures with no visible movement, jump, scan, or feed buttons. A small Menu opens the controls and exit options; games wait while this panel is open. Carbon Rails keeps its turn choices behind Routes & cards.
+
+- **Beaver Crossing:** swipe in any direction for one hop; tap to hop forward.
+- **Carbon Sort:** swipe left/right to shift, tap or swipe up to rotate, swipe down to drop. The next pair and score remain visible.
+- **Kiln Keeper:** drag horizontally to set conveyor speed (left edge off, right edge full); tap to add wood. The temperature, feed percentage, and recovery countdown remain visible.
+- **Carbon Rails:** drag the globe to explore. Open Routes & cards for region, railway, payment, cards, tickets, zoom, and rules. Close the panel to let the computer take its turn.
+- **Convention Hall:** drag the left side to move, drag the right side to look, tap the right side to scan. Both thumbs work together. Menu pauses the game.
+- **Jumper 3:** hold the outer left quarter to move left, the inner left quarter to move right. Hold the right side to jump and release for a shorter jump; swipe up on the right to fire. Movement and jumping work together; slide the movement thumb to run. Menu pauses the game.
 
 Sound starts after interaction. Music and effects settings persist on this device. The rotate prompt, idle screen, and hidden tabs stay quiet. Native forms remain scrollable and use the existing Formspree endpoint; scores remain local to the browser.
 
 ## Rendering
 
-Phone gameplay removes the CRT frame and post-processing, uses smaller render targets, and crops the existing game scenes instead of shrinking kiosk sidebars. The content camera retains its explicit crop and the same raycast mapping. Landscape reserves space for the phone controls and display cutouts; native overlays also respect CSS safe-area insets. Phones request a wake lock where supported without forcing fullscreen.
+Phone gameplay removes the CRT frame and post-processing, uses smaller render targets, and crops the existing game scenes instead of shrinking kiosk sidebars. The content camera retains its explicit crop and the same raycast mapping. The game uses the full landscape viewport with display-cutout insets; native overlays respect CSS safe-area insets. A single graphics canvas survives game changes, with rendering stopped while the picker is visible. Phones request a wake lock where supported without forcing fullscreen.
 
 ## Validation
 
-`npx playwright test e2e/phone.spec.ts` checks the picker, scores, sound controls, idle reset, all six games' native controls, rotation holds, and simultaneous movement/aim/jump at iPhone-sized viewports, including 667 × 375. Rendering and game logic are also covered by the existing booth tests and production build.
+`npx playwright test e2e/phone.spec.ts` checks the picker, scores, sound controls, idle reset, all six games' gestures and menus, successive launches without reloading, rotation holds, and simultaneous movement/aim/jump at iPhone-sized viewports, including 667 × 375. Rendering and game logic are also covered by the existing booth tests and production build.
 
 Android phone emulation also checks the welcome screen, game picker, rotation prompt, and native gameplay controls. Emulation does not verify a physical phone's GPU, browser chrome, or gesture areas. Final hands-on checks in iOS Safari and Android Chrome remain necessary to confirm those device details.

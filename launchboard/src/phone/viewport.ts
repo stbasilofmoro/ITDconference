@@ -7,8 +7,8 @@ function read() {
   const enabled = typeof window !== 'undefined' && matchMedia('(any-pointer: coarse)').matches && Math.min(screen.width, screen.height) <= 500;
   return { enabled, portrait: typeof window !== 'undefined' && innerHeight > innerWidth };
 }
-export const phoneStore = createStore(read);
-export const phoneGameBlocked = () => { const s = phoneStore.getState(); return s.enabled && s.portrait; };
+export const phoneStore = createStore(() => ({ ...read(), menuOpen: false }));
+export const phoneGameBlocked = () => { const s = phoneStore.getState(); return s.enabled && (s.portrait || s.menuOpen); };
 export const usePhone = () => useStore(phoneStore, (s) => s.enabled);
 export function usePhoneViewport() {
   const state = useStore(phoneStore);
@@ -34,8 +34,8 @@ export function displayLayout(w: number, h: number): Layout {
   if (!phoneStore.getState().enabled) return computeLayout(w, h);
   const scene = phoneScene(appStore.getState().activeGameId);
   const inset = w > h ? 48 : 12;
-  const left = scene.panel ? Math.min(w * 0.38, 300) + 8 : inset;
-  const availableW = Math.max(1, w - left - inset), availableH = Math.max(1, h - (scene.panel ? 64 : 0));
+  const left = inset;
+  const availableW = Math.max(1, w - left - inset), availableH = Math.max(1, h);
   const scale = Math.min(availableW / scene.w, availableH / scene.h);
   const tubeW = scene.w * scale, tubeH = scene.h * scale;
   const tubeX = left + (availableW - tubeW) / 2, tubeY = (availableH - tubeH) / 2;
