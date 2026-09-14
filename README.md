@@ -36,6 +36,14 @@ Staff shortcuts: **Ctrl+Shift+Q** cycles the quality preset (Pro → Standard �
 
 All six games include soft sound effects and an original lo-fi soundtrack. Audio starts after a tap or keypress. Use **Sound** at the bottom center to mute or adjust music and effects separately; settings stay on this device. The idle screen and hidden tabs stay quiet. See [`launchboard/AUDIO.md`](launchboard/AUDIO.md).
 
+## iPhone
+
+Open the same deployed site in Safari. Phones automatically get a portrait-friendly welcome screen and game picker. Choose a game, then turn the phone sideways to play. Turning upright holds gameplay; Convention Hall and Jumper also offer a Resume button when you turn back.
+
+The phone view uses larger native menus and controls, cropped game views, and a clear display without the booth's CRT bezel or effects. All six games, music, prize forms, local high scores, and the five-minute idle reset remain available. Scores stay in the browser on that device.
+
+You can use Safari's **Share → Add to Home Screen** to launch it from an icon. See [`launchboard/IPHONE.md`](launchboard/IPHONE.md) for controls and validation.
+
 ## Configure
 
 Edit `launchboard/src/config.ts`: `boothNumber`, `tickerLines`, `subcopy`, idle timeouts, `defaultQuality`.

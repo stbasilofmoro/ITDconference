@@ -4,7 +4,7 @@ import { useStore } from 'zustand';
 import { fonts } from '../../brand';
 import { appStore } from '../../state/store';
 import { scoreStore, showScores, type Result } from '../../leaderboard/scores';
-import { computeLayout } from '../../tube/geometry';
+import { displayLayout as computeLayout } from '../../phone/viewport';
 import { aim, aimedPerson, CONTACT_GOAL, currentTarget, SHIFT_SECONDS, type Run } from './engine';
 import { COMPANIES } from './companies';
 import { companyTexture } from './logos';

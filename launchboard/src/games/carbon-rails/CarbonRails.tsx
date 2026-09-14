@@ -1,4 +1,6 @@
 import { useGameAudio, snapshot } from '../../audio/useGameAudio';
+import { phoneGameBlocked, usePhone } from '../../phone/viewport';
+import { PhoneButton, PhonePanel, PhonePortal } from '../../phone/PhonePortal';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
@@ -20,6 +22,7 @@ function Button({ x, y, width = 210, height = 52, children, onClick, disabled = 
   </group>;
 }
 export default function CarbonRails({ ctx }: { ctx: GameContext }) {
+  const phone = usePhone();
   const [run] = useState(newRun), [, redraw] = useState(0), [region, setRegion] = useState(0), [selected, setSelected] = useState(0), [zoom, setZoom] = useState(0.94);
   const [kept, setKept] = useState<number[]>([]), [help, setHelp] = useState(false), [paused, setPaused] = useState(false), [payColor, setPayColor] = useState<Color>('orange');
   useGameAudio('carbon-rails', () => snapshot.rails(run, paused || help));
@@ -54,7 +57,7 @@ export default function CarbonRails({ ctx }: { ctx: GameContext }) {
     return () => { window.removeEventListener('keydown', key); document.removeEventListener('visibilitychange', hide); };
   }, [run, help, paused, act]);
   useFrame((_, dt) => {
-    if (document.hidden || scoreStore.getState().open || paused || help) return;
+    if (document.hidden || scoreStore.getState().open || paused || help || phoneGameBlocked()) return;
     if (run.phase === 'playing' && run.turn === 1) { aiClock.current += Math.min(dt, 0.1); if (aiClock.current >= 1.1) { aiClock.current = 0; aiTurn(run); refresh(); } } else aiClock.current = 0;
     clock.current += dt; if (clock.current > 0.1) { clock.current = 0; refresh(); }
   });
@@ -69,7 +72,32 @@ export default function CarbonRails({ ctx }: { ctx: GameContext }) {
   const tickets = run.players[0].tickets, modal = run.phase === 'intro' || run.phase === 'tickets' || run.phase === 'won' || help || paused;
   return <>
     <RailGlobe run={run} region={region} selected={selected} select={choose} zoom={zoom} />
-    <Label x={-875} y={500} size={22}>ITD / A WORLD OF POSSIBILITIES</Label>
+    <PhonePortal><PhonePanel title="Carbon Rails" status={`You: ${connections(run, 0)} plants · Cogen: ${connections(run, 1)}`} modal={modal} exit={ctx.exit} result={result ? { id: runId.current, game: 'carbon-rails', score: result[0].connections, detail: `${result[0].connections} biocarbon plants connected / ${result[0].points} tie-break points` } : undefined}>
+      {modal ? <>
+        {run.phase === 'tickets' && !help && !paused ? <><p>Choose destinations. Keep at least {run.initialTickets ? 'two' : 'one'}.</p>{run.ticketOffer.map((t) => <label className="phone-check" key={t.id}><input type="checkbox" checked={kept.includes(t.id)} onChange={() => setKept((v) => v.includes(t.id) ? v.filter((id) => id !== t.id) : [...v, t.id])} />{STATIONS[t.depot].name} to {STATIONS[t.plant].name} · {t.points} points</label>)}<PhoneButton disabled={kept.length < (run.initialTickets ? 2 : 1)} onPress={select}>Confirm destinations</PhoneButton></> : <>
+          <p>{paused ? 'Paused. The computer will wait.' : result ? `You connected ${result[0].connections} biocarbon plants; Cogen connected ${result[1].connections}. ${winner(run) === 0 ? 'Your cleaner network wins!' : winner(run) === 1 ? 'Cogen wins this round.' : 'An even connection.'}` : 'Connect green biocarbon plants to orange depots. The computer connects smoky cogen plants. Land routes only: never cross an ocean.'}</p>
+          {!paused && !result && <><p>Each turn, draw two cards, claim one route with matching cards, or draw three destination tickets and keep at least one. A face-up wild uses both draws.</p><p>Gray routes accept a single color plus wilds. Start with 45 trains and four cards. When someone has two trains left, each side gets a final turn. Most connected plants wins; points, completed tickets, then longest railway break ties.</p><p>Drag the globe to explore. Use the region and route menus to select a connection.</p></>}
+          <PhoneButton onPress={select}>{paused ? 'Resume' : help ? 'Back to the globe' : result ? 'Play again' : 'Choose your first tickets'}</PhoneButton>
+        </>}
+      </> : <>
+        <p>{run.turn === 1 ? 'Cogen is planning…' : run.drawn ? 'Draw your second card.' : 'Your turn: draw, claim, or take tickets.'}</p>
+        <label>Region<select value={region} onChange={(e) => changeRegion(Number(e.target.value))}>{REGIONS.map((r, i) => <option key={r.name} value={i}>{r.name}</option>)}</select></label>
+        <label>Railway<select value={selected} onChange={(e) => choose(Number(e.target.value))}>{ROUTES.filter((r) => r.region === region).map((r) => <option key={r.id} value={r.id}>{routeLabel(r)}</option>)}</select></label>
+        <p>{route.length} {route.color} cards · {run.owners[selected] === null ? 'Open' : run.owners[selected] === 0 ? 'Your railway' : 'Cogen railway'}</p>
+        <label>Pay with<select value={payColor} onChange={(e) => setPayColor(e.target.value as Color)}>{COLORS.map((color) => <option key={color} value={color}>{color} · {hand.filter((c) => c === color).length}</option>)}</select></label>
+        <p>{run.players[0].trains} trains · {hand.filter((c) => c === 'wild').length} wild cards</p>
+        <PhoneButton disabled={!available || !!run.drawn || !payment(run, 0, route, payColor)} onPress={() => act(() => claimRoute(run, selected, payColor))}>Claim route</PhoneButton>
+        <p role="status">{run.message}</p><h2>Collect cards</h2>
+        {run.market.map((card, i) => <PhoneButton key={i} disabled={!available || !!run.drawn && card === 'wild'} onPress={() => act(() => drawCard(run, i))}>{i + 1} · {card}</PhoneButton>)}
+        <PhoneButton disabled={!available} onPress={() => act(() => drawCard(run, -1))}>Draw from deck</PhoneButton>
+        <h2>Destinations</h2><ul>{tickets.map((t) => <li key={t.id}>{connected(run, 0, t.depot, t.plant) ? 'Done: ' : ''}{STATIONS[t.depot].name} to {STATIONS[t.plant].name} · {t.points}</li>)}</ul>
+        <PhoneButton disabled={!available || !!run.drawn || !run.players[0].ticketDeck.length} onPress={() => { act(() => drawTickets(run)); setKept(run.ticketOffer.map((t) => t.id)); }}>Draw tickets</PhoneButton>
+        {canPass(run) && <PhoneButton onPress={() => act(() => pass(run))}>No legal action / Pass</PhoneButton>}
+        <div className="phone-row"><PhoneButton onPress={() => setZoom((v) => Math.max(0.7, v - 0.15))}>Zoom out</PhoneButton><PhoneButton onPress={() => setZoom((v) => Math.min(1.4, v + 0.15))}>Zoom in</PhoneButton></div>
+        <div className="phone-row"><PhoneButton onPress={() => setHelp(true)}>Rules</PhoneButton><PhoneButton onPress={() => setPaused(true)}>Pause</PhoneButton></div>
+      </>}
+    </PhonePanel></PhonePortal>
+    {!phone && <><Label x={-875} y={500} size={22}>ITD / A WORLD OF POSSIBILITIES</Label>
     <Label x={-875} y={463} size={52} color="#2E2735">Carbon Rails</Label>
     <Label x={-875} y={-293} size={21} width={940}>Drag the globe to explore / Real coastlines / Land routes only</Label>
     {REGIONS.map((r, i) => <Button key={r.name} x={-795 + i % 3 * 285} y={-354 - Math.floor(i / 3) * 58} width={272} height={48} color={region === i ? '#32634A' : '#79717B'} onClick={() => changeRegion(i)}>{r.name}</Button>)}
@@ -126,6 +154,6 @@ export default function CarbonRails({ ctx }: { ctx: GameContext }) {
         {result && <ScoreButton x={-200} y={-440} z={1150} result={{ id: runId.current, game: 'carbon-rails', score: result[0].connections, detail: `${result[0].connections} biocarbon plants connected / ${result[0].points} tie-break points` }} />}
         <Label x={-780} y={-477} size={19} width={1580}>Made with Natural Earth / Fictional plants and rail corridors / Original ITD game map</Label>
       </>}
-    </group>}
+    </group>}</>}
   </>;
 }

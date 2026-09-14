@@ -1,4 +1,6 @@
 import { useGameAudio, snapshot } from '../../audio/useGameAudio';
+import { phoneGameBlocked } from '../../phone/viewport';
+import { PhoneButton, PhonePanel, PhonePortal, phoneInput } from '../../phone/PhonePortal';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Line, RoundedBox, Text } from '@react-three/drei';
@@ -118,7 +120,7 @@ export default function KilnKeeper({ ctx }: { ctx: GameContext }) {
   }, [run, pause, change]);
   useFrame(({ clock }, dt) => {
     const phase = run.phase;
-    if (!document.hidden && !scoreStore.getState().open) tick(run, dt);
+    if (!document.hidden && !scoreStore.getState().open && !phoneGameBlocked()) tick(run, dt);
     if (phase !== run.phase) {
       if (run.phase === 'exploded') ctx.tube.pulse('flash');
       else if (run.phase === 'cold') ctx.tube.pulse('static');
@@ -143,6 +145,13 @@ export default function KilnKeeper({ ctx }: { ctx: GameContext }) {
 
   return <>
     <KilnScene run={run} />
+    <PhonePortal><PhonePanel title="Kiln Keeper" status={`${Math.max(0, Math.ceil(RUN_SECONDS - run.elapsed))}s left · Target ${RANGE}`} modal={modal} exit={ctx.exit} result={result ? { id: scoreId.current, game: 'kiln-keeper', score: Math.floor(run.inBand * 100) + (won ? 10000 : 0), detail: `${run.inBand.toFixed(1)} seconds in range / ${won ? 'Batch complete' : cold ? 'Cold batch' : 'Overheated'}` } : undefined}>
+      {modal ? <><p>{run.paused ? 'Paused. The conveyor and temperature will wait.' : won ? `Batch complete! ${quality}% of the shift was in range.` : exploded ? 'Too hot for too long. Reduce feed sooner; wood already inside keeps giving off heat.' : cold ? 'The fire went out. Increase feed before the temperature falls too far.' : `Keep the kiln between ${RANGE} for 90 seconds. Adjust the conveyor and drop extra wood. Heat changes take time, so watch the graph and experiment.`}</p><p>{`You have ${GRACE_SECONDS} seconds to recover outside the safe band.`}</p><PhoneButton onPress={select}>{run.paused ? 'Resume the batch' : result ? 'Try a fresh batch' : 'Start the conveyor'}</PhoneButton></> : <>
+        <p className="phone-temperature">{Math.round(run.temperature)}°C</p><p>{outside ? `Too ${outside}! ${(Math.max(0, GRACE_SECONDS - debt)).toFixed(1)}s to recover` : `${run.trend >= 0 ? '+' : ''}${run.trend.toFixed(1)}°C/s · In range`}</p>
+        <label>Conveyor: {Math.round(run.feed * 100)}%<input aria-label="Conveyor speed" type="range" min="0" max="100" value={Math.round(run.feed * 100)} onChange={(e) => { phoneInput(); change(Number(e.target.value) / 100); }} /></label>
+        <div className="phone-row"><PhoneButton onPress={select}>Drop wood</PhoneButton><PhoneButton onPress={() => change(0)}>Stop feed</PhoneButton></div><PhoneButton onPress={pause}>Pause</PhoneButton>
+      </>}
+    </PhonePanel></PhonePortal>
     <Panel x={-677} y={0} width={430} height={1030} color="#C4C4C4" z={560} />
     <Label x={-865} y={463} size={25}>ITD / CONTROL THE HEAT</Label>
     <Label x={-865} y={405} size={87} color="#2C2630">{'Kiln\nKeeper'}</Label>

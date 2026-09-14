@@ -1,4 +1,6 @@
 import { useGameAudio, snapshot } from '../../audio/useGameAudio';
+import { phoneGameBlocked } from '../../phone/viewport';
+import { PhoneButton, PhonePanel, PhonePortal } from '../../phone/PhonePortal';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { RoundedBox, Text } from '@react-three/drei';
@@ -105,7 +107,7 @@ export default function CarbonSort({ ctx }: { ctx: GameContext }) {
   }, [act, run]);
   useFrame((_, dt) => {
     const phase = run.phase;
-    if (!document.hidden && !scoreStore.getState().open) tick(run, dt);
+    if (!document.hidden && !scoreStore.getState().open && !phoneGameBlocked()) tick(run, dt);
     if (phase !== 'clearing' && run.phase === 'clearing') ctx.tube.pulse('flash');
     if (phase !== 'lost' && run.phase === 'lost') ctx.tube.pulse('static');
     if (run.revision !== lastRevision.current) { lastRevision.current = run.revision; redraw((v) => v + 1); }
@@ -122,6 +124,14 @@ export default function CarbonSort({ ctx }: { ctx: GameContext }) {
 
   return <>
     <Label x={-865} y={460} size={25}>ITD / RECYCLE & REPEAT</Label>
+    <PhonePortal><PhonePanel title="Carbon Sort" status={`Round ${run.round + 1} / 3 · ${run.score} points · ${left} stock left`} modal={modal} exit={ctx.exit} result={run.phase === 'won' || run.phase === 'lost' ? { id: scoreId.current, game: 'carbon-sort', score: run.score, detail: `${run.recovered} materials recovered / ${run.targetsCleared} stock cleared` } : undefined}>
+      {modal ? <><p>{run.paused ? 'Paused. Your materials will wait.' : run.phase === 'won' ? 'All three rounds recovered!' : run.phase === 'lost' ? 'The chamber is full. Try a fresh start.' : run.phase === 'round-won' ? 'Nothing wasted. This round is complete.' : 'Match four of the same material in a row or column. Clear all marked stock to finish each round.'}</p><PhoneButton onPress={() => act('continue')}>{run.paused ? 'Resume sorting' : run.phase === 'round-won' ? 'Next round' : run.phase === 'won' || run.phase === 'lost' ? 'Play again' : 'Start sorting'}</PhoneButton></> : <>
+        <p>Next: {run.next.map((m) => MATERIAL_NAMES[m]).join(' + ')}</p>
+        <div className="phone-row"><PhoneButton onPress={() => act('left')}>Left</PhoneButton><PhoneButton onPress={() => act('right')}>Right</PhoneButton></div>
+        <div className="phone-row"><PhoneButton onPress={() => act('rotate')}>Rotate</PhoneButton><PhoneButton onPress={() => act('down')}>Lower</PhoneButton></div>
+        <div className="phone-row"><PhoneButton onPress={() => act('drop')}>Drop</PhoneButton><PhoneButton onPress={() => act('pause')}>Pause</PhoneButton></div>
+      </>}
+    </PhonePanel></PhonePortal>
     <Label x={-865} y={396} size={94} color="#29252E" width={480}>Carbon Sort</Label>
     <Label x={-865} y={155} size={30}>{'Small matches.\nA bigger second life.'}</Label>
     {MATERIALS.map((material, i) => <group key={material}>

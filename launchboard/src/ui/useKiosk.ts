@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { phoneStore } from '../phone/viewport';
 
 const CURSOR_HIDE_MS = 3000;
 
@@ -15,7 +16,7 @@ export function useKiosk(enabled: boolean) {
       } catch { /* not supported or denied */ }
     };
     const onFirstInteraction = () => {
-      document.documentElement.requestFullscreen?.().catch(() => {});
+      if (!phoneStore.getState().enabled) document.documentElement.requestFullscreen?.().catch(() => {});
       void requestWakeLock();
     };
     const onVisibility = () => { if (document.visibilityState === 'visible') void requestWakeLock(); };
@@ -25,14 +26,14 @@ export function useKiosk(enabled: boolean) {
       cursorTimer = setTimeout(() => document.body.classList.add('cursor-hidden'), CURSOR_HIDE_MS);
     };
 
-    window.addEventListener('pointerdown', onFirstInteraction, { once: true });
-    window.addEventListener('keydown', onFirstInteraction, { once: true });
+    window.addEventListener('pointerdown', onFirstInteraction, { once: true, capture: true });
+    window.addEventListener('keydown', onFirstInteraction, { once: true, capture: true });
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('mousemove', onMouseMove);
     onMouseMove();
     return () => {
-      window.removeEventListener('pointerdown', onFirstInteraction);
-      window.removeEventListener('keydown', onFirstInteraction);
+      window.removeEventListener('pointerdown', onFirstInteraction, true);
+      window.removeEventListener('keydown', onFirstInteraction, true);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('mousemove', onMouseMove);
       clearTimeout(cursorTimer);

@@ -3,8 +3,9 @@ import * as THREE from 'three';
 import { createPortal, useFrame, useThree, type RootState } from '@react-three/fiber';
 import { useFBO } from '@react-three/drei';
 import { colors } from '../brand';
-import { appStore } from '../state/store';
-import { CONTENT_H, CONTENT_W, barrel, computeLayout, insideTube, screenToTubeUv } from './geometry';
+import { appStore, useApp } from '../state/store';
+import { displayLayout, phoneScene, phoneStore, usePhone } from '../phone/viewport';
+import { CONTENT_H, CONTENT_W, barrel, insideTube, screenToTubeUv } from './geometry';
 import { FullscreenPass, makePassMaterial } from './passes';
 import { paramsFor, scanlineCount } from './presets';
 import { evaluateFx, pruneEvents } from './timeline';
@@ -31,6 +32,9 @@ function crtUniforms(): Record<string, THREE.IUniform> {
 
 export function TubeRenderer({ children, bezel }: { children: ReactNode; bezel?: ReactNode }) {
   const size = useThree((s) => s.size);
+  const phone = usePhone();
+  const game = useApp((s) => s.activeGameId);
+  const bounds = phone ? phoneScene(game) : { x: 0, y: 0, w: CONTENT_W, h: CONTENT_H };
 
   const contentScene = useMemo(() => {
     const s = new THREE.Scene();
@@ -38,16 +42,20 @@ export function TubeRenderer({ children, bezel }: { children: ReactNode; bezel?:
     return s;
   }, []);
   const contentCamera = useMemo(() => {
-    const c = new THREE.OrthographicCamera(-CONTENT_W / 2, CONTENT_W / 2, CONTENT_H / 2, -CONTENT_H / 2, 1, 6000);
+    const c = new THREE.OrthographicCamera(bounds.x - bounds.w / 2, bounds.x + bounds.w / 2, bounds.y + bounds.h / 2, bounds.y - bounds.h / 2, 1, 6000);
+    // R3F must retain these cropped bounds instead of fitting the kiosk portal's size.
+    (c as THREE.OrthographicCamera & { manual: boolean }).manual = true;
     c.position.set(0, 0, 3000);
     c.lookAt(0, 0, 0);
     c.updateProjectionMatrix();
     return c;
-  }, []);
+  }, [bounds.x, bounds.y, bounds.w, bounds.h]);
 
-  const contentRT = useFBO(CONTENT_W, CONTENT_H, { samples: 4, depthBuffer: true });
-  const persistA = useFBO(CONTENT_W, CONTENT_H, { depthBuffer: false });
-  const persistB = useFBO(CONTENT_W, CONTENT_H, { depthBuffer: false });
+  const renderW = phone ? Math.min(1280, bounds.w) : CONTENT_W;
+  const renderH = Math.round(renderW * bounds.h / bounds.w);
+  const contentRT = useFBO(renderW, renderH, { samples: phone ? 0 : 4, depthBuffer: true });
+  const persistA = useFBO(phone ? 1 : CONTENT_W, phone ? 1 : CONTENT_H, { depthBuffer: false });
+  const persistB = useFBO(phone ? 1 : CONTENT_W, phone ? 1 : CONTENT_H, { depthBuffer: false });
   const bloomA = useFBO(BLOOM_W, BLOOM_H, { depthBuffer: false });
   const bloomB = useFBO(BLOOM_W, BLOOM_H, { depthBuffer: false });
 
@@ -57,6 +65,7 @@ export function TubeRenderer({ children, bezel }: { children: ReactNode; bezel?:
     bright: makePassMaterial(brightFrag, { uImage: { value: null }, uThreshold: { value: 0.6 } }),
     blur: makePassMaterial(blurFrag, { uImage: { value: null }, uDirection: { value: new THREE.Vector2() } }),
     crt: new THREE.ShaderMaterial({ vertexShader: tubeVert, fragmentShader: crtFrag, uniforms: crtUniforms() }),
+    phone: new THREE.MeshBasicMaterial({ map: contentRT.texture, toneMapped: false }),
   }), []);
 
   useEffect(() => () => {
@@ -71,7 +80,7 @@ export function TubeRenderer({ children, bezel }: { children: ReactNode; bezel?:
     const now = performance.now();
     tubeBus.events = pruneEvents(tubeBus.events, now);
     const fx = evaluateFx(tubeBus.events, now);
-    const p = paramsFor(appStore.getState().quality, tubeBus.overrides);
+    const p = paramsFor(appStore.getState().quality, phone ? { curvature: 0, cornerRadius: 0, chroma: 0, bloom: 0, persistence: 0, maskStrength: 0, scanStrength: 0, grain: 0, rollBand: 0, flicker: 0, glass: 0, vignette: 0 } : tubeBus.overrides);
 
     gl.setRenderTarget(contentRT);
     gl.clear();
@@ -101,7 +110,7 @@ export function TubeRenderer({ children, bezel }: { children: ReactNode; bezel?:
       pass.render(gl, mats.blur, bloomA);
     }
 
-    const layout = computeLayout(state.size.width, state.size.height);
+    const layout = displayLayout(state.size.width, state.size.height);
     const u = mats.crt.uniforms;
     u.uImage.value = image;
     u.uBloom.value = bloomA.texture;
@@ -136,8 +145,8 @@ export function TubeRenderer({ children, bezel }: { children: ReactNode; bezel?:
 
   const compute = useCallback((event: { offsetX: number; offsetY: number }, state: RootState, previous?: RootState) => {
     const root = previous ?? state;
-    const layout = computeLayout(root.size.width, root.size.height);
-    const p = paramsFor(appStore.getState().quality, tubeBus.overrides);
+    const layout = displayLayout(root.size.width, root.size.height);
+    const p = paramsFor(appStore.getState().quality, phoneStore.getState().enabled ? { curvature: 0, cornerRadius: 0 } : tubeBus.overrides);
     const tubeUv = screenToTubeUv(event.offsetX, event.offsetY, layout);
     if (insideTube(tubeUv, p.cornerRadius)) {
       const c = barrel(tubeUv, p.curvature);
@@ -148,7 +157,7 @@ export function TubeRenderer({ children, bezel }: { children: ReactNode; bezel?:
     state.raycaster.setFromCamera(state.pointer, state.camera);
   }, []);
 
-  const layout = computeLayout(size.width, size.height);
+  const layout = displayLayout(size.width, size.height);
   const cx = layout.tubeX + layout.tubeW / 2 - size.width / 2;
   const cy = size.height / 2 - (layout.tubeY + layout.tubeH / 2);
 
@@ -159,7 +168,7 @@ export function TubeRenderer({ children, bezel }: { children: ReactNode; bezel?:
         size: { width: CONTENT_W, height: CONTENT_H, top: 0, left: 0 },
         events: { compute, priority: 1 },
       })}
-      <mesh position={[cx, cy, 0]} material={mats.crt}>
+      <mesh position={[cx, cy, 0]} material={phone ? mats.phone : mats.crt}>
         <planeGeometry args={[layout.tubeW, layout.tubeH]} />
       </mesh>
       {bezel}

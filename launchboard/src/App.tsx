@@ -1,5 +1,9 @@
 import { AudioControls } from './audio/AudioControls';
-import { Suspense, type ReactNode } from 'react';
+import { Suspense, useEffect, type ReactNode } from 'react';
+import { fonts } from './brand';
+import { PhoneHome, PhoneRotate } from './phone/PhoneHome';
+import { usePhone, usePhoneViewport } from './phone/viewport';
+import './phone/phone.css';
 import { Canvas, useThree } from '@react-three/fiber';
 import { effectiveConfig, config } from './config';
 import { DebugPanel } from './debug/DebugPanel';
@@ -34,23 +38,32 @@ appStore.setState({ quality: initial.quality, qualityOverride: initial.qualityOv
 installE2eHooks();
 
 function Monitor({ children }: { children: ReactNode }) {
+  const phone = usePhone();
   const size = useThree((s) => s.size);
   const layout = computeLayout(size.width, size.height);
-  return <TubeRenderer bezel={<Bezel layout={layout} viewW={size.width} viewH={size.height} />}>{children}</TubeRenderer>;
+  return <TubeRenderer bezel={phone ? null : <Bezel layout={layout} viewW={size.width} viewH={size.height} />}>{children}</TubeRenderer>;
 }
 
 export default function App() {
+  const phone = usePhoneViewport();
+  const screen = useApp((s) => s.screen);
+  useEffect(() => {
+    document.body.dataset.phone = String(phone.enabled);
+    document.body.dataset.phoneGame = String(screen === 'game');
+  }, [phone.enabled, screen]);
   useGlobalInput();
   useKiosk(!isE2e);
   const quality = useApp((s) => s.quality);
   const contextLost = useApp((s) => s.contextLost);
   const debug = useApp((s) => s.debug);
   const fallback = !hasWebGL2 || quality === 'safe';
-  useIdle(cfg, fallback || contextLost);
+  useIdle(cfg, !phone.enabled && (fallback || contextLost));
 
   return (
     <>
-      {!fallback && (
+      {phone.enabled && <style>{`@font-face{font-family:PhoneBarlow;src:url('${fonts.medium}')}@font-face{font-family:PhoneBarlow;src:url('${fonts.semibold}');font-weight:600}`}</style>}
+      {phone.enabled && screen !== 'game' && <PhoneHome games={games} />}
+      {!fallback && (!phone.enabled || screen === 'game') && (
         <Canvas orthographic flat dpr={[1, 2]} camera={{ position: [0, 0, 1000], zoom: 1, near: 0.1, far: 5000 }}
           gl={{ antialias: true, powerPreference: 'high-performance' }}
           onCreated={({ gl }) => {
@@ -79,10 +92,11 @@ export default function App() {
               </>
             ))}
           </Monitor>
-          {initial.autoSelect && <PerfAutoSelect />}
+          {initial.autoSelect && !phone.enabled && <PerfAutoSelect />}
         </Canvas>
       )}
-      {(fallback || contextLost) && <CssFallback games={games} />}
+      {(fallback || contextLost) && (!phone.enabled || screen === 'game') && <CssFallback games={games} />}
+      {phone.enabled && phone.portrait && screen === 'game' && <PhoneRotate />}
       {debug && <DebugPanel />}
       <Leaderboards />
       <AudioControls />

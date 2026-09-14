@@ -1,4 +1,6 @@
 import { useGameAudio, snapshot } from '../../audio/useGameAudio';
+import { phoneGameBlocked } from '../../phone/viewport';
+import { PhoneButton, PhonePanel, PhonePortal } from '../../phone/PhonePortal';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { RoundedBox, Text } from '@react-three/drei';
@@ -51,7 +53,7 @@ export default function BeaverCrossing({ ctx }: { ctx: GameContext }) {
   useEffect(() => ctx.input.subscribe(act), [ctx.input, act]);
   useFrame((_, delta) => {
     const before = run.phase, row = run.bestRow;
-    if (!document.hidden && !scoreStore.getState().open) tick(run, delta);
+    if (!document.hidden && !scoreStore.getState().open && !phoneGameBlocked()) tick(run, delta);
     if (before !== run.phase || row !== run.bestRow) {
       if (run.phase === 'hit') ctx.tube.pulse('static');
       if (run.phase === 'cleared' || run.phase === 'won') ctx.tube.pulse('flash');
@@ -72,6 +74,12 @@ export default function BeaverCrossing({ ctx }: { ctx: GameContext }) {
   const panel = view.phase !== 'playing';
   const result = { id: scoreId.current, game: 'beaver-crossing' as const, score: Math.max(0, (run.level * FINISH_ROW + run.bestRow) * 100 - run.attempts * 10), detail: `${run.phase === 'won' ? 5 : run.level} levels complete / ${run.attempts} retries` };
   return <>
+    {!claimOpen && <PhonePortal><PhonePanel title="Beaver Crossing" status={`Level ${view.level + 1} / 5 · ${level.title}`} modal={panel} exit={ctx.exit} result={view.phase === 'won' || view.phase === 'hit' ? result : undefined}>
+      {panel ? <><p>{view.phase === 'won' ? 'All five crossings complete! ITD will send you delicious maple syrup for your success.' : view.phase === 'hit' ? HIT_COPY[run.hitKind ?? 'train'] : view.phase === 'cleared' ? 'Safe and sound. Ready for the next crossing?' : level.story}</p>
+        <p>Hop to the green finish row. Tap an arrow for each hop; watch for trains, crews, and flying ties.</p>
+        <PhoneButton onPress={() => act('select')}>{view.phase === 'won' ? 'Claim my maple syrup' : view.phase === 'hit' ? 'Try this level again' : view.phase === 'cleared' ? 'Next crossing' : 'Start crossing'}</PhoneButton>
+      </> : <><p>{view.bestRow} / {FINISH_ROW} rows · {view.attempts} retries</p><div className="phone-dpad"><PhoneButton onPress={() => act('up')}>↑</PhoneButton><PhoneButton onPress={() => act('left')}>←</PhoneButton><PhoneButton onPress={() => act('down')}>↓</PhoneButton><PhoneButton onPress={() => act('right')}>→</PhoneButton></div></>}
+    </PhonePanel></PhonePortal>}
     <Yard key={view.level} run={run} />
     <mesh position={[-690, 0, 1150]}><planeGeometry args={[450, 1040]} /><meshBasicMaterial color="#C4C4C4" toneMapped={false} /></mesh>
     <Label x={-865} y={455} size={25}>ITD / BEAVER CROSSING</Label>

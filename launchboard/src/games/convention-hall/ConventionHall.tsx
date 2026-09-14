@@ -1,4 +1,5 @@
 import { useGameAudio, snapshot } from '../../audio/useGameAudio';
+import { phoneGameBlocked } from '../../phone/viewport';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
@@ -59,7 +60,7 @@ export default function ConventionHall({ ctx }: { ctx: GameContext }) {
   }, [run, pause, clearControls]);
   useFrame((_, dt) => {
     const before = run.health;
-    if (!document.hidden && !scoreStore.getState().open) {
+    if (!document.hidden && !scoreStore.getState().open && !phoneGameBlocked()) {
       const down = (...codes: string[]) => codes.some((code) => keys.current.has(code) || held.current.has(code)) ? 1 : 0;
       const controls: Controls = { forward: touch.forward + down('KeyW', 'ArrowUp', 'forward') - down('KeyS', 'ArrowDown', 'back'), strafe: touch.strafe + down('KeyD', 'right') - down('KeyA', 'left'), turn: down('ArrowRight', 'KeyE', 'turnRight') - down('ArrowLeft', 'KeyQ', 'turnLeft'), look: 0 };
       const pad = navigator.getGamepads?.().find((p) => p);

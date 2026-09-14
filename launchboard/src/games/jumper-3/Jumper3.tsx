@@ -1,4 +1,5 @@
 import { useGameAudio, snapshot } from '../../audio/useGameAudio';
+import { phoneGameBlocked } from '../../phone/viewport';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import type { GameContext } from '../types';
@@ -35,7 +36,7 @@ export default function Jumper3({ ctx }: { ctx: GameContext }) {
     const axis = pad?.axes[0] ?? 0;
     const input: Input = { move: Number(key('ArrowRight', 'KeyD') || controls.held('right') || button(15)) - Number(key('ArrowLeft', 'KeyA') || controls.held('left') || button(14)) + (Math.abs(axis) > 0.2 ? axis : 0), jump: key('Space', 'Enter', 'KeyW', 'ArrowUp') || controls.held('jump') || controls.jumpQueued || button(0), run: controls.sprint || key('ShiftLeft', 'ShiftRight') || button(7), fire: key('KeyX') || controls.held('fire') || button(2) };
     const before = run.phase, power = run.power, beforeTime = run.totalTime;
-    if (!document.hidden && !scoreStore.getState().open) { if (input.move || input.jump || input.fire) appStore.getState().markInput(performance.now()); tick(run, dt, input); } else controls.clear();
+    if (!document.hidden && !scoreStore.getState().open && !phoneGameBlocked()) { if (input.move || input.jump || input.fire) appStore.getState().markInput(performance.now()); tick(run, dt, input); } else controls.clear();
     if (run.totalTime !== beforeTime) controls.jumpQueued = false;
     if (run.phase !== before || power !== run.power) ctx.tube.pulse(run.phase === 'hit' || run.phase === 'lost' ? 'static' : 'flash');
     if (run.phase !== 'playing' || run.paused) controls.clear();

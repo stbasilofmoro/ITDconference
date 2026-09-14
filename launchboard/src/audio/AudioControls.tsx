@@ -3,6 +3,7 @@ import { useStore } from 'zustand';
 import { fonts } from '../brand';
 import { appStore } from '../state/store';
 import { audioStore, boothAudio } from './engine';
+import { phoneGameBlocked, phoneStore } from '../phone/viewport';
 import './audio.css';
 
 export function AudioControls() {
@@ -10,7 +11,8 @@ export function AudioControls() {
   const toggle = useRef<HTMLButtonElement>(null), close = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     boothAudio.load(); let focused = document.hasFocus();
-    const activity = () => boothAudio.setActive(focused && !document.hidden && ['board', 'game'].includes(appStore.getState().screen));
+    const activity = () => boothAudio.setActive(focused && !document.hidden && !(appStore.getState().screen === 'game' && phoneGameBlocked()) && ['board', 'game'].includes(appStore.getState().screen));
+    const unsubscribePhone = phoneStore.subscribe(activity);
     const focus = () => { focused = true; activity(); }, blur = () => { focused = false; activity(); };
     const unlock = () => boothAudio.unlock();
     const unsubscribe = appStore.subscribe((next, previous) => {
@@ -23,7 +25,7 @@ export function AudioControls() {
     window.addEventListener('focus', focus); window.addEventListener('blur', blur); document.addEventListener('visibilitychange', activity);
     const w = window as unknown as { __boothAudio?: unknown };
     if (import.meta.env.DEV && new URLSearchParams(location.search).has('e2e')) w.__boothAudio = { getState: () => boothAudio.inspect() };
-    return () => { unsubscribe(); window.removeEventListener('pointerdown', unlock, true); window.removeEventListener('keydown', unlock, true); window.removeEventListener('focus', focus); window.removeEventListener('blur', blur); document.removeEventListener('visibilitychange', activity); delete w.__boothAudio; boothAudio.dispose(); };
+    return () => { unsubscribe(); unsubscribePhone(); window.removeEventListener('pointerdown', unlock, true); window.removeEventListener('keydown', unlock, true); window.removeEventListener('focus', focus); window.removeEventListener('blur', blur); document.removeEventListener('visibilitychange', activity); delete w.__boothAudio; boothAudio.dispose(); };
   }, []);
   useEffect(() => { if (open) close.current?.focus(); }, [open]);
   const dismiss = () => { setOpen(false); toggle.current?.focus(); };
