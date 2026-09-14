@@ -4,6 +4,7 @@ import { Text } from '@react-three/drei';
 import type { Group } from 'three';
 import { colors, fonts } from '../brand';
 import { ATTRACT_PRIZE, config } from '../config';
+import { SyrupBottle } from '../games/beaver-crossing/Models';
 import { Iso } from '../illustrations/Iso';
 import { CrossingSignal } from '../illustrations/CrossingSignal';
 import { RotaryKilnDisplay } from '../illustrations/RotaryKilnDisplay';
@@ -54,10 +55,13 @@ export function Attract() {
     <>
       <Yard />
       <StackedHeadline lines={config.headlineLines} position={[LEFT_X, 420]} fontSize={140} lineHeight={150} />
-      <Text font={fonts.semibold} fontSize={37} color={colors.ink} anchorX="left" anchorY="top" maxWidth={660} position={[LEFT_X, -85, 200]}>
+      <group position={[LEFT_X + 38, -221, 260]} rotation={[0.08, -0.2, -0.1]} scale={85}>
+        <SyrupBottle />
+      </group>
+      <Text font={fonts.semibold} fontSize={37} color={colors.ink} anchorX="left" anchorY="top" maxWidth={660} position={[LEFT_X + 110, -85, 200]}>
         {ATTRACT_PRIZE.headline}
       </Text>
-      <Text font={fonts.medium} fontSize={35} lineHeight={1.15} color={colors.slate} anchorX="left" anchorY="top" maxWidth={660} position={[LEFT_X, -140, 200]}>
+      <Text font={fonts.medium} fontSize={35} lineHeight={1.15} color={colors.slate} anchorX="left" anchorY="top" maxWidth={660} position={[LEFT_X + 110, -140, 200]}>
         {ATTRACT_PRIZE.reward}
       </Text>
       <BlinkingPrompt />
