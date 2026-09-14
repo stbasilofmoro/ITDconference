@@ -14,7 +14,7 @@ export const BASE_GAMES: GameDefinition[] = [
   { id: 'carbon-sort', title: 'Carbon Sort', accent: 'green', illustration: 'materials', status: 'playable', load: () => import('./carbon-sort/CarbonSort') },
   { id: 'kiln-keeper', title: 'Kiln Keeper', accent: 'pink', illustration: 'rotaryKiln', status: 'playable', load: () => import('./kiln-keeper/KilnKeeper') },
   { id: 'carbon-rails', title: 'Carbon Rails', accent: 'green', illustration: 'globe', status: 'playable', load: () => import('./carbon-rails/CarbonRails') },
-  soon('slot-5', 'crossing', 'pink'),
+  { id: 'convention-hall', title: 'Convention Hall', accent: 'orange', illustration: 'badgeScanner', status: 'playable', load: () => import('./convention-hall/ConventionHall') },
   soon('slot-6', 'kiln', 'pink'),
 ];
 

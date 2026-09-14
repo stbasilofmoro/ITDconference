@@ -28,7 +28,13 @@ for (const game of [
     if (id === 'carbon-rails') { const r = window.__carbonRails!.getState(); r.owners[0] = 0; r.owners[1] = 0; window.__carbonRails!.setState({ owners: r.owners, phase: 'won' }); }
   }, game.id);
   const p = await page.evaluate(([x, y]) => window.__launchboard!.contentToScreen(x, y), [game.x, game.y]);
-  await page.mouse.click(p.px, p.py); await expect(page.getByRole('dialog')).toBeVisible();
+  // Fixture state changes before R3F's result screen (and its suspended text) is
+  // committed. Canvas clicks need explicit retrying; DOM locator auto-waiting
+  // cannot see the button's mesh while that screen is still being drawn.
+  await expect(async () => {
+    await page.mouse.click(p.px, p.py);
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 10_000 });
   await page.getByLabel('First name').fill('Pat'); await page.getByLabel('Last name').fill('Example');
   await page.getByRole('button', { name: 'Submit my score' }).click();
   await expect(page.getByRole('heading', { name: 'Score saved.' })).toBeVisible();

@@ -6,8 +6,8 @@ describe('local leaderboards and forms', () => {
   it('retains ten scores per game, sorts high to low, and deduplicates a run', () => {
     const storage = memory();
     for (const game of Object.keys(GAME_NAMES) as Score['game'][]) for (let i = 0; i < 14; i++) saveScore({ ...entry(`${game}-${i}`, i), game }, storage);
-    expect(loadScores(storage)).toHaveLength(40); expect(ranked(loadScores(storage), 'carbon-sort').map((s) => s.score)).toEqual([13, 12, 11, 10, 9, 8, 7, 6, 5, 4]);
-    saveScore({ ...entry('carbon-sort-13', 200) }, storage); expect(loadScores(storage)).toHaveLength(40); expect(ranked(loadScores(storage), 'carbon-sort')[0].score).toBe(200);
+    expect(loadScores(storage)).toHaveLength(Object.keys(GAME_NAMES).length * 10); expect(ranked(loadScores(storage), 'carbon-sort').map((s) => s.score)).toEqual([13, 12, 11, 10, 9, 8, 7, 6, 5, 4]);
+    saveScore({ ...entry('carbon-sort-13', 200) }, storage); expect(loadScores(storage)).toHaveLength(Object.keys(GAME_NAMES).length * 10); expect(ranked(loadScores(storage), 'carbon-sort')[0].score).toBe(200);
   });
   it('stores only names and score data, even if given a prize claim object', () => {
     const storage = memory(); saveScore({ ...entry(), phone: '5551234567', company: 'Private company', address: 'Private address' } as Score, storage);

@@ -59,7 +59,7 @@ export function Leaderboards() {
     }}>
       <header><div><small>ITD / THIS BOOTH COMPUTER</small><h1 id="score-title">High scores.</h1></div><button onClick={closeScores} aria-label="Close leaderboard">Close</button></header>
       <nav aria-label="Game leaderboards">{Object.entries(GAME_NAMES).map(([id, title]) => <button key={id} aria-pressed={state.game === id} onClick={() => scoreStore.setState({ game: id as GameId })}>{title}</button>)}</nav>
-      <div className="score-columns"><section><h2>{GAME_NAMES[state.game]}</h2><p className="score-muted">{state.game === 'beaver-crossing' ? 'Crossings and progress, with a retry penalty.' : state.game === 'carbon-sort' ? 'Total recycling points.' : state.game === 'kiln-keeper' ? '100 points per second in range + 10,000 for a completed batch.' : 'Biocarbon plants connected to their regional depot.'}</p>
+      <div className="score-columns"><section><h2>{GAME_NAMES[state.game]}</h2><p className="score-muted">{state.game === 'beaver-crossing' ? 'Crossings and progress, with a retry penalty.' : state.game === 'carbon-sort' ? 'Total recycling points.' : state.game === 'kiln-keeper' ? '100 points per second in range + 10,000 for a completed batch.' : state.game === 'carbon-rails' ? 'Biocarbon plants connected to their regional depot.' : 'Company contacts and badge scans, with time and fresh-air bonuses.'}</p>
         {rows.length ? <ol className="score-list">{rows.map((row, i) => <li key={row.id}><span className="score-rank">{i + 1}</span><span>{row.firstName} {row.lastName}</span><strong>{row.score.toLocaleString()}</strong></li>)}</ol> : <p className="score-empty">The board is yours to start.<br />Finish a game and add your name.</p>}
         <p className="score-muted">Top 10 submitted runs on this browser. Names and scores remain here until browser data is cleared.</p>
       </section><section className="score-entry">{state.result ? <>
@@ -70,7 +70,7 @@ export function Leaderboards() {
           <p className="score-muted">Your first and last name and score will appear on this booth leaderboard and be sent to ITD through Formspree.</p>
           {error && <p role="alert">{error}</p>}<button type="submit">{status === 'sending' ? 'Submitting...' : 'Submit my score'}</button>
         </fieldset></form>}
-      </> : <><small>MAKE YOUR MARK</small><h2>Four games.<br />A little friendly competition.</h2><p>Play a game, then use “Save score / Leaderboard” on the result screen. Your form connects your first and last name to that run.</p><p>Beaver Crossing prize claims also save your winning score.</p></>}</section></div>
+      </> : <><small>MAKE YOUR MARK</small><h2>Five games.<br />A little friendly competition.</h2><p>Play a game, then use “Save score / Leaderboard” on the result screen. Your form connects your first and last name to that run.</p><p>Beaver Crossing prize claims also save your winning score.</p></>}</section></div>
     </div>
   </div>;
 }

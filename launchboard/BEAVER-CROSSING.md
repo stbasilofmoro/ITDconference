@@ -1,6 +1,6 @@
 # Beaver Crossing
 
-The first launchboard tile is a five-level, original beaver crossing game. Carbon Sort, Kiln Keeper, and Carbon Rails occupy the next three tiles; two slots remain available for future games.
+The first launchboard tile is a five-level, original beaver crossing game. Carbon Sort, Kiln Keeper, Carbon Rails, and Convention Hall occupy the next four tiles; one slot remains available for a future game.
 
 ## Play
 
@@ -28,7 +28,7 @@ To use a different form, override the public endpoint in `launchboard/.env.local
 VITE_FORMSPREE_ENDPOINT=https://formspree.io/f/YOUR_FORM_ID
 ```
 
-Use the real form ID from the Formspree dashboard and restart Vite. For a GitHub Pages override, set the repository Actions variable `VITE_FORMSPREE_ENDPOINT` and rebuild. An unset or empty variable uses the default ITD form. This endpoint is public; no API key is required or included in the client.
+Use the real form ID from the Formspree dashboard and restart Vite. For a Netlify override, set the site environment variable `VITE_FORMSPREE_ENDPOINT` and rebuild. An unset or empty variable uses the default ITD form. This endpoint is public; no API key is required or included in the client.
 
 The form submits first and last name, company, phone, address, score, game name, levels completed, and stable claim/run identifiers using JSON over HTTPS. Only names and score data are saved to the local leaderboard; company, phone, and address are not persisted on the kiosk. It confirms prize receipt only after an accepted response. Rejected requests, offline errors, and timeouts show a clear message; they do not show a successful claim. See [LEADERBOARDS.md](LEADERBOARDS.md) for scoring and storage details.
 

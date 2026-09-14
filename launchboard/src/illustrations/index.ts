@@ -9,9 +9,11 @@ import { CrossingSignal } from './CrossingSignal';
 import { Globe } from './Globe';
 import { Beaver } from './Beaver';
 import { RecoveredMaterials } from './RecoveredMaterials';
+import { BadgeScanner } from './BadgeScanner';
 import { RotaryKiln } from './RotaryKiln';
 
 export const ILLUSTRATIONS: Record<IllustrationId, { C: ComponentType<IllustrationProps>; scale: number; lift: number }> = {
+  badgeScanner: { C: BadgeScanner, scale: 90, lift: -35 },
   beaver: { C: Beaver, scale: 140, lift: -75 },
   materials: { C: RecoveredMaterials, scale: 110, lift: -60 },
   rotaryKiln: { C: RotaryKiln, scale: 44, lift: -60 },
