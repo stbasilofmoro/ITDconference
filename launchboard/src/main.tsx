@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { BASE_GAMES } from './games/registry';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -9,8 +10,12 @@ createRoot(document.getElementById('root')!).render(
 );
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
+  window.addEventListener('load', async () => {
     navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js?v=${__BUILD_ID__}`).catch(() => {});
+
+    // Warm playable chunks (and their CSS) before collecting resources for the offline
+    // cache, so a visitor can launch a game offline even if nobody played it online.
+    await Promise.allSettled(BASE_GAMES.filter((game) => game.status === 'playable' && game.load).map((game) => game.load!()));
 
     // The SW's own `install` precache only knows the shell + fonts (fixed across builds).
     // The hashed JS/CSS bundle this exact page just loaded is only known to the page itself —

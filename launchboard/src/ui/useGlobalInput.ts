@@ -16,12 +16,22 @@ function wakeOrRoute(action: Action | null): boolean {
 }
 
 function dispatch(action: Action) {
+  if (document.querySelector('[data-kiosk-form]')) {
+    appStore.getState().markInput(performance.now());
+    if (action === 'back') { tubeBus.pulse('channel'); appStore.getState().exitGame(); }
+    return;
+  }
   if (!wakeOrRoute(action)) inputBus.emit(action);
 }
 
 export function useGlobalInput() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Native prize fields own their text editing, arrows, spaces, and Enter.
+      if (e.target instanceof Element && e.target.closest('[data-kiosk-form]')) {
+        appStore.getState().markInput(performance.now());
+        return;
+      }
       if (e.ctrlKey && e.shiftKey && e.code === 'KeyQ') {
         e.preventDefault();
         appStore.getState().cycleQualityOverride();

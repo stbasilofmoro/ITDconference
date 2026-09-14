@@ -1,0 +1,27 @@
+.beaver-prize-shade{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:3vh 4vw;background:rgba(18,17,21,.88);font-family:BeaverBarlow,Arial,sans-serif;color:#25232A;cursor:auto!important}
+.beaver-prize-shade *{box-sizing:border-box;cursor:auto!important}
+.beaver-prize{width:min(1160px,94vw);max-height:94dvh;overflow:auto;display:grid;grid-template-columns:.88fr 1.12fr;background:#D9D9D9;border-radius:12px;box-shadow:0 35px 100px #0007}
+.beaver-prize-story{padding:44px;background:#C4C4C4;display:flex;flex-direction:column;align-items:flex-start}
+.beaver-eyebrow,.beaver-prize-foot{font-size:13px;letter-spacing:.13em;font-weight:600}
+.beaver-prize h1{font-size:clamp(48px,6vw,86px);line-height:.98;letter-spacing:-.045em;margin:28px 0 22px;font-weight:600}
+.beaver-prize p{font-size:19px;line-height:1.45;margin:12px 0 20px}
+.beaver-prize-foot{margin-top:auto;font-size:11px}
+.beaver-prize-details{padding:36px 42px}
+.beaver-prize h2{font-size:32px;line-height:1.1;margin:0 0 8px;font-weight:600;letter-spacing:-.02em}
+.beaver-prize-details>p{font-size:17px;margin:8px 0 18px}
+.beaver-prize fieldset{border:0;margin:0;padding:0;display:grid;gap:12px}
+.beaver-prize label{font-size:16px;font-weight:600;display:grid;gap:5px}
+.beaver-prize input,.beaver-prize textarea{width:100%;border:1px solid #ACAAAD;border-radius:5px;background:#F0EFED;font:18px BeaverBarlow,Arial,sans-serif;padding:10px 12px;color:#25232A;resize:vertical;min-height:46px}
+.beaver-prize input:focus,.beaver-prize textarea:focus{outline:3px solid #B87732;outline-offset:1px}
+.beaver-prize button{width:100%;min-height:48px;background:#29272E;color:#FAF7F0;border:0;border-radius:5px;font:600 18px BeaverBarlow,Arial,sans-serif;padding:12px 16px;cursor:pointer!important}
+.beaver-prize button:focus-visible{outline:3px solid #B87732;outline-offset:3px}
+.beaver-prize button:disabled{opacity:.5;cursor:wait!important}
+.beaver-prize button.beaver-secondary{background:transparent;color:#55515B;font-size:15px;margin-top:4px}
+.beaver-prize p.beaver-privacy{font-size:13px;color:#635E69;margin:14px 0}
+.beaver-prize p.beaver-error{font-size:15px;color:#752D2D;background:#EBDCDC;padding:10px;border-radius:4px}
+.beaver-bottle{position:relative;align-self:center;width:110px;height:160px;border-radius:26px 26px 15px 15px;background:#B37A39;box-shadow:inset -14px 0 #94632F,15px 20px 0 #0001;margin:38px 0 24px;transform:rotate(-9deg);display:grid;place-items:center}
+.beaver-bottle:before{content:'';position:absolute;top:-32px;left:36px;width:40px;height:36px;border-radius:5px;background:linear-gradient(#62503E 0 35%,#A37036 35%)}
+.beaver-bottle span{text-align:center;background:#ECE2CC;padding:15px 9px;font-size:10px;letter-spacing:.1em;line-height:1.7;color:#705130}.beaver-bottle b{font-size:19px}
+.beaver-sent{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:flex-start}.beaver-check{font-size:50px;color:#37865D;margin-bottom:20px}
+@media(max-width:700px){.beaver-prize{grid-template-columns:1fr}.beaver-prize-story{padding:24px}.beaver-prize h1{font-size:48px;margin:18px 0}.beaver-bottle,.beaver-prize-foot{display:none}.beaver-prize-details{padding:24px}}
+@media(max-height:800px) and (min-width:701px){.beaver-prize-details{padding:24px 30px}.beaver-prize-story{padding:30px}.beaver-prize fieldset{gap:7px}.beaver-prize input,.beaver-prize textarea{padding:7px 10px;min-height:40px}.beaver-prize p.beaver-privacy{margin:9px 0}.beaver-prize p{font-size:16px}}

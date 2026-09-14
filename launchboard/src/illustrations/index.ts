@@ -7,8 +7,14 @@ import { Shredder } from './Shredder';
 import { Kiln } from './Kiln';
 import { CrossingSignal } from './CrossingSignal';
 import { Globe } from './Globe';
+import { Beaver } from './Beaver';
+import { RecoveredMaterials } from './RecoveredMaterials';
+import { RotaryKiln } from './RotaryKiln';
 
 export const ILLUSTRATIONS: Record<IllustrationId, { C: ComponentType<IllustrationProps>; scale: number; lift: number }> = {
+  beaver: { C: Beaver, scale: 140, lift: -75 },
+  materials: { C: RecoveredMaterials, scale: 110, lift: -60 },
+  rotaryKiln: { C: RotaryKiln, scale: 44, lift: -60 },
   tieStack: { C: TieStack, scale: 17, lift: -20 },
   train: { C: Train, scale: 9, lift: -20 },
   shredder: { C: Shredder, scale: 15, lift: -80 },

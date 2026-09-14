@@ -2,11 +2,19 @@ import { describe, it, expect } from 'vitest';
 import { BASE_GAMES, buildRegistry, validateRegistry, TEST_PATTERN_ID, BROKEN_GAME_ID, type GameDefinition } from '../src/games/registry';
 
 describe('registry', () => {
-  it('ships six coming-soon slots with distinct illustrations', () => {
+  it('ships four playable games and two coming-soon slots', () => {
     expect(BASE_GAMES).toHaveLength(6);
-    expect(BASE_GAMES.every((g) => g.status === 'coming-soon')).toBe(true);
+    expect(BASE_GAMES[0]).toMatchObject({ id: 'beaver-crossing', title: 'Beaver Crossing', status: 'playable' });
+    expect(typeof BASE_GAMES[0].load).toBe('function');
+    expect(BASE_GAMES[1]).toMatchObject({ id: 'carbon-sort', title: 'Carbon Sort', status: 'playable', illustration: 'materials' });
+    expect(typeof BASE_GAMES[1].load).toBe('function');
+    expect(BASE_GAMES[2]).toMatchObject({ id: 'kiln-keeper', title: 'Kiln Keeper', status: 'playable', illustration: 'rotaryKiln' });
+    expect(typeof BASE_GAMES[2].load).toBe('function');
+    expect(BASE_GAMES[3]).toMatchObject({ id: 'carbon-rails', title: 'Carbon Rails', status: 'playable', illustration: 'globe' });
+    expect(typeof BASE_GAMES[3].load).toBe('function');
+    expect(BASE_GAMES.slice(4).every((g) => g.status === 'coming-soon')).toBe(true);
     expect(new Set(BASE_GAMES.map((g) => g.illustration)).size).toBe(6);
-    expect(BASE_GAMES.every((g) => g.title === 'Coming soon...')).toBe(true);
+    expect(BASE_GAMES.slice(4).every((g) => g.title === 'Coming soon...')).toBe(true);
   });
 
   it('is valid with and without the test pattern', () => {

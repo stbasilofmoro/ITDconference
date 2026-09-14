@@ -18,11 +18,12 @@ import { PerfAutoSelect } from './tube/PerfAutoSelect';
 import { TubeRenderer } from './tube/TubeRenderer';
 import { useGlobalInput } from './ui/useGlobalInput';
 import { useKiosk } from './ui/useKiosk';
+import { Leaderboards } from './leaderboard/Leaderboards';
 
 const params = new URLSearchParams(window.location.search);
 const cfg = effectiveConfig(window.location.search);
 const isE2e = params.has('e2e');
-const games = buildRegistry({ includeTestPattern: isE2e, includeBrokenGame: params.has('brokengame') });
+const games = buildRegistry({ includeTestPattern: isE2e && !params.has('beaver'), includeBrokenGame: params.has('brokengame') });
 
 const hasWebGL2 = (() => {
   try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; }
@@ -82,6 +83,7 @@ export default function App() {
       )}
       {(fallback || contextLost) && <CssFallback games={games} />}
       {debug && <DebugPanel />}
+      <Leaderboards />
     </>
   );
 }

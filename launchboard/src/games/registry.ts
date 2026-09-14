@@ -10,12 +10,12 @@ const soon = (id: string, illustration: GameDefinition['illustration'], accent: 
 });
 
 export const BASE_GAMES: GameDefinition[] = [
-  soon('slot-1', 'tieStack', 'orange'),
-  soon('slot-2', 'train', 'orange'),
-  soon('slot-3', 'shredder', 'orange'),
-  soon('slot-4', 'kiln', 'pink'),
+  { id: 'beaver-crossing', title: 'Beaver Crossing', accent: 'orange', illustration: 'beaver', status: 'playable', load: () => import('./beaver-crossing/BeaverCrossing') },
+  { id: 'carbon-sort', title: 'Carbon Sort', accent: 'green', illustration: 'materials', status: 'playable', load: () => import('./carbon-sort/CarbonSort') },
+  { id: 'kiln-keeper', title: 'Kiln Keeper', accent: 'pink', illustration: 'rotaryKiln', status: 'playable', load: () => import('./kiln-keeper/KilnKeeper') },
+  { id: 'carbon-rails', title: 'Carbon Rails', accent: 'green', illustration: 'globe', status: 'playable', load: () => import('./carbon-rails/CarbonRails') },
   soon('slot-5', 'crossing', 'pink'),
-  soon('slot-6', 'globe', 'green'),
+  soon('slot-6', 'kiln', 'pink'),
 ];
 
 const TEST_PATTERN: GameDefinition = {

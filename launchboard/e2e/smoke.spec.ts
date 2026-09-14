@@ -41,9 +41,14 @@ test('attract → board → launch test pattern → exit → placeholder → idl
   await expect.poll(async () => (await state(page)).screen).toBe('board');
 
   await page.keyboard.press('ArrowRight');
+  await expect.poll(async () => (await state(page)).focusIndex).toBe(1);
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(async () => (await state(page)).focusIndex).toBe(2);
+  await page.keyboard.press('ArrowDown');
+  await expect.poll(async () => (await state(page)).focusIndex).toBe(5);
   await page.keyboard.press('Enter');
   await page.waitForTimeout(600);
-  expect((await state(page))).toMatchObject({ screen: 'board', focusIndex: 1 });
+  expect((await state(page))).toMatchObject({ screen: 'board', focusIndex: 5 });
 
   await expect.poll(async () => (await state(page)).screen, { timeout: 8000 }).toBe('attract');
   expect(errors).toEqual([]);
