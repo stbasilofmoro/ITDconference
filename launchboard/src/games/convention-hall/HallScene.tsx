@@ -1,3 +1,4 @@
+import { usePortraitPhone } from '../../phone/viewport';
 import { useMemo, useRef } from 'react';
 import { createPortal, useFrame, useThree } from '@react-three/fiber';
 import { Billboard, Line, Text, useFBO } from '@react-three/drei';
@@ -42,7 +43,7 @@ function Equipment({ kind }: { kind: number }) {
     </>}
   </group>;
 }
-function World({ run, camera }: { run: Run; camera: PerspectiveCamera }) {
+function World({ run, camera, portrait }: { run: Run; camera: PerspectiveCamera; portrait: boolean }) {
   const gun = useRef<Group>(null!);
   useFrame(() => { if (gun.current) gun.current.position.y = -0.36 + (run.phase === 'playing' && !run.paused ? Math.sin(run.elapsed * 3) * 0.004 : 0) - run.beamTime * 0.08; });
   const beamStart = camera.localToWorld(new Vector3(0.34, -0.25, -0.9));
@@ -69,20 +70,21 @@ function World({ run, camera }: { run: Run; camera: PerspectiveCamera }) {
     {run.people.map((person) => <Attendee key={person.id} person={person} time={run.elapsed} />)}
     {run.breath.map((b) => <group key={b.id} position={[b.x, 1.6, b.z]}>{[0, 1, 2, 3].map((i) => <mesh key={i} position={[Math.sin(i * 2.4) * b.age * 0.35, Math.cos(i * 2.4) * b.age * 0.3, 0]} scale={0.18 + b.age * 0.28}><sphereGeometry args={[1, 8, 6]} /><meshBasicMaterial color={i % 2 ? '#C9C272' : '#A4AA55'} transparent opacity={0.52} depthWrite={false} /></mesh>)}</group>)}
     {run.beamTime > 0 && <Line points={[beamStart, new Vector3(...run.beamEnd)]} color="#67FFBC" lineWidth={3} />}
-    <primitive object={camera}><group ref={gun} position={[0.36, -0.36, -0.64]} rotation={[0.04, -0.15, -0.08]} scale={0.75}><ScannerModel scanning={run.beamTime > 0} /><Box at={[0, -0.27, 0.25]} size={[0.19, 0.19, 0.28]} color="#BA9377" round /></group></primitive>
+    <primitive object={camera}><group ref={gun} position={[portrait ? 0.16 : 0.36, -0.36, -0.64]} rotation={[0.04, -0.15, -0.08]} scale={0.75}><ScannerModel scanning={run.beamTime > 0} /><Box at={[0, -0.27, 0.25]} size={[0.19, 0.19, 0.28]} color="#BA9377" round /></group></primitive>
   </>;
 }
 export function HallScene({ run, touch = false }: { run: Run; touch?: boolean }) {
   const gl = useThree((s) => s.gl);
+  const portrait = usePortraitPhone();
   const scene = useMemo(() => { const s = new Scene(); s.background = new Color('#BEBBB4'); s.fog = new Fog('#BEBBB4', 25, 68); return s; }, []);
-  const camera = useMemo(() => new PerspectiveCamera(68, 1920 / 1080, 0.06, 85), []);
-  const target = useFBO(touch ? 1280 : 1536, touch ? 720 : 864, { samples: touch ? 0 : 2, depthBuffer: true });
+  const camera = useMemo(() => Object.assign(new PerspectiveCamera(68, portrait ? 720 / 1080 : 1920 / 1080, 0.06, 85), { manual: true }), [portrait]);
+  const target = useFBO(portrait ? 720 : touch ? 1280 : 1536, portrait ? 1080 : touch ? 720 : 864, { samples: touch ? 0 : 2, depthBuffer: true });
   useFrame(() => {
     camera.position.set(run.x, 1.65, run.z); camera.rotation.order = 'YXZ'; camera.rotation.set(run.pitch, -run.yaw, 0); camera.updateMatrixWorld();
     const previous = gl.getRenderTarget(); gl.setRenderTarget(target); gl.clear(); gl.render(scene, camera); gl.setRenderTarget(previous);
   }, -1);
   return <>
-    {createPortal(<World run={run} camera={camera} />, scene, { camera })}
-    <mesh position={[0, 0, 0]}><planeGeometry args={[1920, 1080]} /><meshBasicMaterial map={target.texture} toneMapped={false} /></mesh>
+    {createPortal(<World run={run} camera={camera} portrait={portrait} />, scene, { camera })}
+    <mesh position={[0, 0, 0]}><planeGeometry args={[portrait ? 720 : 1920, 1080]} /><meshBasicMaterial map={target.texture} toneMapped={false} /></mesh>
   </>;
 }

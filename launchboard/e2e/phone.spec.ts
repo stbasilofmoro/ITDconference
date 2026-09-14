@@ -20,7 +20,7 @@ async function home(page: Page) {
 async function launch(page: Page, title: string) {
   await home(page);
   await page.locator('.phone-game').filter({ hasText: title }).tap();
-  await expect(page.getByRole('dialog', { name: 'Turn your phone sideways' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Turn your phone sideways' })).toBeHidden();
   await page.setViewportSize({ width: 844, height: 390 });
   await expect(page.getByRole('dialog', { name: 'Turn your phone sideways' })).toBeHidden();
 }
@@ -38,7 +38,7 @@ test('portrait picker, high scores, sound, and five-minute reset fit the phone',
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: 'test-results/phone-welcome.png' });
 });
-test('beaver gesture hopping, portrait hold, and idle exit', async ({ page }) => {
+test('beaver gesture hopping, portrait play, and idle exit', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await launch(page, 'Beaver Crossing');
   await page.getByRole('button', { name: 'Start crossing', exact: true }).tap();
@@ -46,10 +46,10 @@ test('beaver gesture hopping, portrait hold, and idle exit', async ({ page }) =>
   await expect.poll(() => page.evaluate(() => window.__beaver!.getState().row)).toBe(1);
   await page.screenshot({ path: 'test-results/phone-beaver.png' });
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.getByRole('dialog', { name: 'Turn your phone sideways' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Turn your phone sideways' })).toHaveCount(0);
   const before = await page.evaluate(() => window.__beaver!.getState().time);
   await page.waitForTimeout(500);
-  expect(await page.evaluate(() => window.__beaver!.getState().time)).toBe(before);
+  expect(await page.evaluate(() => window.__beaver!.getState().time)).toBeGreaterThan(before);
   await page.evaluate(() => window.__launchboard!.getState().markInput(performance.now() - 300001));
   await expect(page.getByRole('button', { name: 'TOUCH TO PLAY' })).toBeVisible();
   await expect(page.locator('[data-phone-hud]')).toHaveCount(0);
@@ -149,8 +149,10 @@ test('Jumper simultaneous move and jump, release and orientation pause', async (
   await expect.poll(() => page.evaluate(() => window.__jumper3!.getState().shots.filter(s => !s.evil).length)).toBeGreaterThan(0);
   await page.screenshot({ path: 'test-results/phone-jumper.png' });
   await page.setViewportSize({ width: 375, height: 667 });
-  await expect(page.getByRole('dialog', { name: 'Turn your phone sideways' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Turn your phone sideways' })).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => window.__jumper3!.getState().paused)).toBe(true);
+  await page.getByRole('button', { name: 'Resume adventure' }).tap();
+  await expect.poll(() => page.evaluate(() => window.__jumper3!.getState().paused)).toBe(false);
 });
 
 test('phone result submits a named score and keeps it after reload', async ({ page }) => {
@@ -191,3 +193,52 @@ test('all six games launch in succession using the same mobile graphics canvas',
   }
   expect(errors).toEqual([]);
 });
+
+
+for (const [title, start] of [['Beaver Crossing', 'Start crossing'], ['Carbon Sort', 'Start sorting'], ['Kiln Keeper', 'Start the conveyor'], ['Carbon Rails', 'Choose your first tickets'], ['Convention Hall', 'Enter the hall'], ['Jumper 3', 'Start chapter']]) {
+  test(title + ' launches and plays upright without rotating', async ({ page, context }) => {
+    const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+    await home(page);
+    await page.locator('.phone-game').filter({ hasText: title }).tap();
+    await expect(page.getByRole('dialog', { name: 'Turn your phone sideways' })).toHaveCount(0);
+    await page.getByRole('button', { name: start, exact: true }).tap();
+    if (title === 'Beaver Crossing') {
+      await swipe(page, [200, 480], [200, 410]);
+      await expect.poll(() => page.evaluate(() => window.__beaver!.getState().row)).toBe(1);
+    } else if (title === 'Carbon Sort') {
+      await page.setViewportSize({ width: 320, height: 568 });
+      const x = await page.evaluate(() => window.__carbonSort!.getState().active!.x);
+      await swipe(page, [230, 330], [175, 330]);
+      expect(await page.evaluate(() => window.__carbonSort!.getState().active!.x)).toBe(x - 1);
+    } else if (title === 'Kiln Keeper') {
+      await swipe(page, [130, 440], [330, 440]);
+      await expect.poll(() => page.evaluate(() => window.__kilnKeeper!.getState().feed)).toBeGreaterThan(.8);
+      await expect.poll(() => page.evaluate(() => window.__kilnKeeper!.getState().elapsed)).toBeGreaterThan(0);
+    } else if (title === 'Carbon Rails') {
+      await page.getByRole('button', { name: 'Confirm destinations' }).tap();
+      await swipe(page, [195, 400], [255, 400]);
+      await page.getByRole('button', { name: 'Routes & cards' }).tap();
+      const cards = await page.evaluate(() => window.__carbonRails!.getState().players[0].hand.length);
+      await page.getByRole('button', { name: 'Draw from deck' }).tap();
+      expect(await page.evaluate(() => window.__carbonRails!.getState().players[0].hand.length)).toBe(cards + 1);
+      await page.getByRole('button', { name: 'Back to game' }).tap();
+    } else if (title === 'Convention Hall') {
+      await page.touchscreen.tap(280, 400);
+      await expect.poll(() => page.evaluate(() => window.__conventionHall!.getState().found)).toBe(1);
+      await expect.poll(() => page.evaluate(() => window.__conventionHall!.getState().elapsed)).toBeGreaterThan(0);
+    } else {
+      const cdp = await context.newCDPSession(page);
+      const before = await page.evaluate(() => window.__jumper3!.getState().x);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 120, y: 500, id: 1 }, { x: 280, y: 500, id: 2 }] });
+      await expect.poll(() => page.evaluate(() => window.__jumper3!.getState().x)).toBeGreaterThan(before);
+      expect(await page.evaluate(() => window.__jumper3!.getState().y)).toBeGreaterThan(0);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: 'test-results/portrait-' + title.replaceAll(' ', '-') + '.png' });
+    await page.getByRole('button', { name: title === 'Carbon Rails' ? 'Routes & cards' : 'Menu', exact: true }).tap();
+    await page.getByRole('button', { name: title === 'Convention Hall' || title === 'Jumper 3' ? 'Launchboard' : 'Exit to games', exact: true }).tap();
+    await expect(page.locator('.phone-game')).toHaveCount(6);
+    expect(errors).toEqual([]);
+  });
+}

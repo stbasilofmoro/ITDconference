@@ -1,3 +1,4 @@
+import { preventClickThrough } from '../../ui/touchNavigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { useStore } from 'zustand';
@@ -12,7 +13,7 @@ import { usePhone } from '../../phone/viewport';
 
 type Props = { run: Run; controls: JumperControls; result: Result; next(): void; pause(): void; exit(): void };
 function Action({ children, onPress, secondary = false }: { children: ReactNode; onPress(): void; secondary?: boolean }) {
-  return <button className={secondary ? 'jumper-secondary' : ''} onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); appStore.getState().markInput(performance.now()); onPress(); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); }} onClick={(e) => { if (e.detail === 0) onPress(); }}>{children}</button>;
+  return <button className={secondary ? 'jumper-secondary' : ''} onPointerUp={(e) => { e.preventDefault(); e.stopPropagation(); preventClickThrough(); appStore.getState().markInput(performance.now()); onPress(); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); }} onClick={(e) => { if (e.detail === 0) onPress(); }}>{children}</button>;
 }
 function Hud({ run: r, controls, result, next, pause, exit }: Props) {
   const phone = usePhone();
@@ -51,7 +52,7 @@ function Hud({ run: r, controls, result, next, pause, exit }: Props) {
       {phone ? <>
         <div className="phone-jumper-move" role="region" aria-label="Hold left or right to move" onPointerDown={(e) => { e.preventDefault(); moveStart.current.set(e.pointerId, e.clientX); controls.press(e.pointerId, e.clientX < innerWidth * .225 ? 'left' : 'right'); e.currentTarget.setPointerCapture(e.pointerId); }} onPointerMove={(e) => { if (e.currentTarget.hasPointerCapture(e.pointerId)) { controls.sprint = Math.abs(e.clientX - (moveStart.current.get(e.pointerId) ?? e.clientX)) > 35; controls.release(e.pointerId); controls.press(e.pointerId, e.clientX < innerWidth * .225 ? 'left' : 'right'); } }} />
         <div className="phone-jumper-jump" role="region" aria-label="Hold to jump, swipe up to fire" onPointerDown={(e) => { e.preventDefault(); jumpStart.current.set(e.pointerId, e.clientY); controls.press(e.pointerId, 'jump'); e.currentTarget.setPointerCapture(e.pointerId); }} onPointerMove={(e) => { const y = jumpStart.current.get(e.pointerId); if (y !== undefined && y - e.clientY > 35) { controls.release(e.pointerId); controls.press(e.pointerId, 'fire'); controls.fireQueued = true; jumpStart.current.delete(e.pointerId); } }} onPointerUp={(e) => jumpStart.current.delete(e.pointerId)} onPointerCancel={(e) => jumpStart.current.delete(e.pointerId)} />
-        <button className="phone-menu-toggle" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); appStore.getState().markInput(performance.now()); pause(); }} onClick={(e) => { if (e.detail === 0) pause(); }}>Menu</button><div className="phone-gesture-hint">Left half: hold left / right. Right half: hold to jump, swipe up to fire.</div>
+        <button className="phone-menu-toggle" onPointerUp={(e) => { e.preventDefault(); e.stopPropagation(); preventClickThrough(); appStore.getState().markInput(performance.now()); pause(); }} onClick={(e) => { if (e.detail === 0) pause(); }}>Menu</button><div className="phone-gesture-hint">Left half: hold left / right. Right half: hold to jump, swipe up to fire.</div>
       </> : <><div className="jumper-left">{held('left', 'Left')}{held('right', 'Right')}<button className="jumper-run" aria-pressed={controls.sprint} onPointerDown={(e) => { e.preventDefault(); controls.sprint = !controls.sprint; redraw((n) => n + 1); }} onClick={(e) => { if (e.detail === 0) { controls.sprint = !controls.sprint; redraw((n) => n + 1); } }} onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') e.stopPropagation(); }}>Run: {controls.sprint ? 'on' : 'off'}</button></div>
       <div className="jumper-right">{held('fire', 'Blaster')}{held('jump', 'Jump')}<div><Action onPress={pause} secondary>Pause</Action><Action onPress={exit} secondary>Exit</Action></div></div>
       <div className="jumper-bottom-hint">Hold Jump to go higher.<br />100 carbon credits earn an extra life.</div>

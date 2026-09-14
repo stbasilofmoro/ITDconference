@@ -1,4 +1,5 @@
 import { Text } from '@react-three/drei';
+import { usePortraitPhone } from '../../phone/viewport';
 import { fonts } from '../../brand';
 import { Box, Cylinder, CarbonBag, Ties } from '../beaver-crossing/Models';
 import { AtomBeaver } from '../../illustrations/Atom';
@@ -44,11 +45,13 @@ function Factory({ stage, x }: { stage: number; x: number }) {
   </group>;
 }
 export function JumperScene({ run: r }: { run: Run }) {
-  const l = LEVELS[r.stage], camera = r.camera, t = r.totalTime, elevation = Math.max(0, r.y - 4);
+  const portrait = usePortraitPhone();
+  const left = portrait ? -500 : -960;
+  const l = LEVELS[r.stage], camera = portrait ? Math.max(0, r.x - 4.5) : r.camera, t = r.totalTime, elevation = Math.max(0, r.y - 4);
   return <>
     <mesh position={[0, 0, -550]}><planeGeometry args={[1920, 1080]} /><meshBasicMaterial color={l.color} toneMapped={false} /></mesh>
-    <group position={[-960 - camera * 18, -270, -300]} scale={52}>{Array.from({ length: 8 }, (_, i) => <Factory key={i} stage={r.stage} x={i * 20 - 5} />)}</group>
-    <group position={[-960 - camera * VIEW_SCALE, -210 - elevation * VIEW_SCALE, 20]} scale={VIEW_SCALE}>
+    <group position={[left - camera * 18, -270, -300]} scale={52}>{Array.from({ length: 8 }, (_, i) => <Factory key={i} stage={r.stage} x={i * 20 - 5} />)}</group>
+    <group position={[left - camera * VIEW_SCALE, -210 - elevation * VIEW_SCALE, 20]} scale={VIEW_SCALE}>
       {r.solids.filter((s) => s.x + s.w > camera - 3 && s.x < camera + VIEW_WIDTH + 4).map((s) => <group key={s.id} position={[s.x + s.w / 2, s.y + s.h / 2, 0]}>
         <Box size={[s.w, s.h, s.kind === 'ground' ? 2.5 : 1.3]} color={s.kind === 'ground' ? '#686475' : s.kind === 'crate' ? s.used ? '#8E8582' : '#DDA152' : '#977758'} />
         {s.kind === 'ground' ? <><Box at={[0, s.h / 2 - 0.09, 1.27]} size={[s.w, 0.18, 0.16]} color="#BBB8B2" />{Array.from({ length: Math.floor(s.w / 1.3) }, (_, i) => <Box key={i} at={[-s.w / 2 + 0.6 + i * 1.3, s.h / 2 + 0.055, 0]} size={[0.17, 0.12, 2.2]} color="#9A795B" />)}</> : s.kind === 'crate' ? <Text position={[0, 0, 0.67]} font={fonts.semibold} fontSize={0.6} color={s.used ? '#6B616C' : '#FFF0C5'}>{s.used ? '-' : 'C'}</Text> : <Box at={[0, s.h / 2, 0.66]} size={[s.w, 0.12, 0.14]} color={s.kind === 'lift' ? '#8EDBA8' : '#C1BCAD'} />}

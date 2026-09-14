@@ -16,15 +16,10 @@ export function PhoneHome({ games }: { games: GameDefinition[] }) {
       <p className="phone-eyebrow">OLD TIES. NEW POSSIBILITIES.</p>
       <h1>{screen === 'board' ? 'Pick your\nnext adventure.' : 'Have Some\nFun At AREMA'}</h1>
       <div className="phone-prize"><Bottle /><p><strong>{ATTRACT_PRIZE.headline}</strong><span>{ATTRACT_PRIZE.reward.replace('\n', ' ')}</span></p></div>
-      {screen !== 'board' ? <><button className="phone-play" onClick={() => appStore.getState().toBoard()}>TOUCH TO PLAY <span>↗</span></button><p className="phone-home-help">Six games. A little friendly competition.<br />Turn your phone sideways to play.</p><div className="phone-track" aria-hidden="true"><span /></div></> : <>
-        <p className="phone-home-help">Choose a game, then turn your phone sideways.</p>
+      {screen !== 'board' ? <><button className="phone-play" onClick={() => appStore.getState().toBoard()}>TOUCH TO PLAY <span>↗</span></button><p className="phone-home-help">Six games. A little friendly competition.<br />Play upright or sideways.</p><div className="phone-track" aria-hidden="true"><span /></div></> : <>
+        <p className="phone-home-help">Choose a game. Play in portrait or landscape.</p>
         <div className="phone-game-grid">{games.map((game, i) => <button key={game.id} className={`phone-game phone-${game.accent}`} onClick={() => { phoneInput(); appStore.getState().launch(game.id); }}><span className="phone-game-number">0{i + 1}</span><div><h2>{game.title}</h2><p>{descriptions[i]}</p></div><span aria-hidden="true">↗</span></button>)}</div>
       </>}
     </div>
   </main>;
-}
-export function PhoneRotate() {
-  return <div className="phone-rotate" role="dialog" aria-label="Turn your phone sideways" onPointerDown={(e) => { e.stopPropagation(); phoneInput(); }} onKeyDown={(e) => { e.stopPropagation(); phoneInput(); }}>
-    <span className="phone-rotate-icon" aria-hidden="true">↻</span><h1>A little more room<br />to play.</h1><p>Turn your phone sideways.<br />Your game will wait right here.</p><button onClick={() => appStore.getState().exitGame()}>Back to games</button>
-  </div>;
 }

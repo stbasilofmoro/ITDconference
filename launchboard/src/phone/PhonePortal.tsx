@@ -1,3 +1,4 @@
+import { preventClickThrough } from '../ui/touchNavigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { useStore } from 'zustand';
@@ -26,7 +27,7 @@ export function PhonePanel({ title, status, modal = false, result, exit, childre
   if (!modal && !open) return <>
     {gestures && <PhoneGestures {...gestures} />}
     <div className="phone-game-status"><strong>{title}</strong><span>{status}</span>{summary}<small>{gestures?.hint ?? 'Drag the globe. Open Routes & cards to plan your turn.'}</small></div>
-    <button className="phone-menu-toggle" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); phoneInput(); setOpen(true); }} onClick={(e) => { if (e.detail === 0) { phoneInput(); setOpen(true); } }}>{gestures ? 'Menu' : 'Routes & cards'}</button>
+    <button className="phone-menu-toggle" onPointerUp={(e) => { e.preventDefault(); e.stopPropagation(); preventClickThrough(); phoneInput(); setOpen(true); }} onClick={(e) => { if (e.detail === 0) { phoneInput(); setOpen(true); } }}>{gestures ? 'Menu' : 'Routes & cards'}</button>
   </>;
   return <div className={`phone-controls${modal ? ' phone-modal' : ''}`} onPointerDown={(e) => { e.stopPropagation(); phoneInput(); }} onKeyDown={(e) => { e.stopPropagation(); phoneInput(); }} onKeyUp={(e) => e.stopPropagation()} onScrollCapture={phoneInput}>
     <section aria-label={`${title} phone controls`}>

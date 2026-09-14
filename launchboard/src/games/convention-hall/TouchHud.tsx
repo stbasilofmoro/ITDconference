@@ -1,3 +1,4 @@
+import { preventClickThrough } from '../../ui/touchNavigation';
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { useStore } from 'zustand';
@@ -15,10 +16,11 @@ type Props = { run: Run; touch: HallTouchInput; result: Result; select(): void; 
 const markInput = () => appStore.getState().markInput(performance.now());
 const stop = (e: PointerEvent) => { e.preventDefault(); e.stopPropagation(); markInput(); };
 
-// Activate directly from pointerdown: secondary fingers do not reliably produce
-// a synthesized click. detail=0 still supports native keyboard/assistive clicks.
+// Scanning and pause respond on press for simultaneous fingers; navigation waits for
+// release so a tap cannot also activate the screen it just revealed.
 function TouchButton({ children, onPress, className = '' }: { children: ReactNode; onPress(): void; className?: string }) {
-  return <button className={className} onPointerDown={(e) => { stop(e); onPress(); }} onClick={(e) => { e.stopPropagation(); if (e.detail === 0) { markInput(); onPress(); } }}
+  const immediate = className === 'hall-scan' || children === 'Pause';
+  return <button className={className} onPointerDown={(e) => { stop(e); if (immediate) { if (children === 'Pause') preventClickThrough(); onPress(); } }} onPointerUp={(e) => { stop(e); if (!immediate) { preventClickThrough(); onPress(); } }} onClick={(e) => { e.stopPropagation(); if (e.detail === 0) { markInput(); onPress(); } }}
     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') e.stopPropagation(); }}>{children}</button>;
 }
 
@@ -105,7 +107,7 @@ function TouchHud({ run, touch, result, select, pause, exit, clear }: Props) {
       <div className="hall-movement"><span>MOVE</span><div className="hall-joystick" role="group" aria-label="Movement joystick" onPointerDown={(e) => begin(e, 'move')} onPointerMove={update}>
         <span className="hall-joystick-cross" /><span className="hall-joystick-thumb" style={{ transform: 'translate(-50%, -50%)', left: `${50 + touch.knobX * 36}%`, top: `${50 + touch.knobY * 36}%` }} />
       </div></div>
-      {phone ? <><button className="phone-menu-toggle" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); appStore.getState().markInput(performance.now()); pause(); }} onClick={(e) => { if (e.detail === 0) pause(); }}>Menu</button><div className="phone-gesture-hint">Left: drag to move. Right: drag to look, tap to scan.</div></> : <div className="hall-touch-actions"><span>DRAG THE VIEW TO LOOK</span><TouchButton className="hall-scan" onPress={select}>Scan</TouchButton><div><TouchButton onPress={pause}>Pause</TouchButton><TouchButton onPress={exit}>Exit</TouchButton></div></div>}
+      {phone ? <><button className="phone-menu-toggle" onPointerUp={(e) => { e.preventDefault(); e.stopPropagation(); preventClickThrough(); appStore.getState().markInput(performance.now()); pause(); }} onClick={(e) => { if (e.detail === 0) pause(); }}>Menu</button><div className="phone-gesture-hint">Left: drag to move. Right: drag to look, tap to scan.</div></> : <div className="hall-touch-actions"><span>DRAG THE VIEW TO LOOK</span><TouchButton className="hall-scan" onPress={select}>Scan</TouchButton><div><TouchButton onPress={pause}>Pause</TouchButton><TouchButton onPress={exit}>Exit</TouchButton></div></div>}
       <p className="hall-touch-tip">Move, look, and scan together.<br />{viewport.height > viewport.width ? 'Turn your iPad sideways for a wider view.' : 'Scan a pushy vendor to stop their breath.'}</p>
       {run.hitTime > 0 && <div className="hall-touch-hit" style={{ opacity: run.hitTime * 0.35 }} />}
     </>}

@@ -1,7 +1,7 @@
 import { AudioControls } from './audio/AudioControls';
 import { Suspense, useEffect, type ReactNode } from 'react';
 import { fonts } from './brand';
-import { PhoneHome, PhoneRotate } from './phone/PhoneHome';
+import { PhoneHome } from './phone/PhoneHome';
 import { usePhone, usePhoneViewport } from './phone/viewport';
 import './phone/phone.css';
 import { Canvas, useThree } from '@react-three/fiber';
@@ -101,7 +101,6 @@ export default function App() {
         </Canvas>
       )}
       {(fallback || contextLost) && (!phone.enabled || screen === 'game') && <CssFallback games={games} />}
-      {phone.enabled && phone.portrait && screen === 'game' && <PhoneRotate />}
       {debug && <DebugPanel />}
       <Leaderboards />
       <AudioControls />
