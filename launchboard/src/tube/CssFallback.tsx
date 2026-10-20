@@ -14,9 +14,8 @@ const css = `
 @font-face { font-family: 'Barlow'; font-weight: 500; src: url('${asset('fonts/Barlow-Medium.ttf')}'); }
 @font-face { font-family: 'Barlow'; font-weight: 600; src: url('${asset('fonts/Barlow-SemiBold.ttf')}'); }
 .fb { position: fixed; inset: 0; display: grid; place-items: center; background: #0b0b0c; z-index: 10; }
-.fb-tube { position: relative; width: min(94vw, calc(94vh * 16 / 9)); aspect-ratio: 16 / 9; overflow: hidden;
-  background: ${colors.studioGrey}; color: ${colors.ink}; font-family: 'Barlow', sans-serif;
-  border-radius: 3.2% / 5.6%; box-shadow: 0 0 0 1.4vw #161618, 0 0 0 3vw #2b2b2e; }
+.fb-tube { position: relative; width: min(100vw, calc(100vh * 16 / 9)); aspect-ratio: 16 / 9; overflow: hidden;
+  background: ${colors.studioGrey}; color: ${colors.ink}; font-family: 'Barlow', sans-serif; }
 .fb-inner { position: absolute; inset: 0; display: grid; grid-template-columns: 38% 62%; padding: 4.2% 4.2% 9%; box-sizing: border-box; }
 .fb-h { font-weight: 600; font-size: 6.2vmin; line-height: 1.05; margin: 0; }
 .fb-sub { color: ${colors.slate}; font-size: 2vmin; margin-top: 3vmin; }

@@ -86,7 +86,7 @@ function TouchHud({ run, touch, result, select, pause, exit, clear }: Props) {
       <small>ITD / CONVENTION HALL</small>
       <h1>{run.paused ? 'Time for a mint.' : run.phase === 'won' ? 'Well connected.' : finished ? run.health === 0 ? 'Time for fresh air.' : 'The hall is closing.' : 'Make a connection.'}</h1>
       {run.paused ? <p>The clock and vendors are paused. Settle your thumbs, then resume.</p> : finished ? <><p>You found {run.found} of {CONTACT_GOAL} company contacts and scanned {run.scanCount} badges.</p><p className="hall-final-score">{run.score.toLocaleString()} points</p><p>{run.phase === 'won' ? 'All five companies found! Time and fresh-air bonuses included.' : 'Follow the company emblems. Scan pushy vendors before they breathe on you.'}</p></> : <>
-        <p>Follow five company clues through the exhibit hall. Scan AREMA badges to reveal employers and turn attendees green.</p>
+        <p>Follow five company clues through the exhibit hall. Scan RTA badges to reveal employers and turn attendees green.</p>
         <Clue company={company} />
         <p><strong>Left thumb: drag to move. Right thumb: drag to look.</strong> {phone ? 'Tap the right side to scan. Both thumbs work together.' : 'Tap Scan while moving or aiming.'} Scan pushy vendors before their bad-breath clouds reach you.</p>
         <p className="hall-muted">Three minutes. Four fresh-air bars. A fresh set of companies each run.</p>

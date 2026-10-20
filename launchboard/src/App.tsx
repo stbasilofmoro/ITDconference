@@ -2,9 +2,9 @@ import { AudioControls } from './audio/AudioControls';
 import { Suspense, useEffect, type ReactNode } from 'react';
 import { fonts } from './brand';
 import { PhoneHome } from './phone/PhoneHome';
-import { usePhone, usePhoneViewport } from './phone/viewport';
+import { usePhoneViewport } from './phone/viewport';
 import './phone/phone.css';
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas } from '@react-three/fiber';
 import { effectiveConfig, config } from './config';
 import { DebugPanel } from './debug/DebugPanel';
 import { Gallery } from './dev/Gallery';
@@ -16,9 +16,7 @@ import { ScreenRouter } from './screens/ScreenRouter';
 import { loadStoredOverride, resolveInitialQuality } from './state/quality';
 import { appStore, useApp } from './state/store';
 import { useIdle } from './state/useIdle';
-import { Bezel } from './tube/Bezel';
 import { CssFallback } from './tube/CssFallback';
-import { computeLayout } from './tube/geometry';
 import { PerfAutoSelect } from './tube/PerfAutoSelect';
 import { TubeRenderer } from './tube/TubeRenderer';
 import { useGlobalInput } from './ui/useGlobalInput';
@@ -38,10 +36,7 @@ appStore.setState({ quality: initial.quality, qualityOverride: initial.qualityOv
 installE2eHooks();
 
 function Monitor({ children }: { children: ReactNode }) {
-  const phone = usePhone();
-  const size = useThree((s) => s.size);
-  const layout = computeLayout(size.width, size.height);
-  return <TubeRenderer bezel={phone ? null : <Bezel layout={layout} viewW={size.width} viewH={size.height} />}>{children}</TubeRenderer>;
+  return <TubeRenderer>{children}</TubeRenderer>;
 }
 
 export default function App() {

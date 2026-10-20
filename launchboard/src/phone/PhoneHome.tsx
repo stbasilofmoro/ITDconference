@@ -11,10 +11,10 @@ export function PhoneHome({ games }: { games: GameDefinition[] }) {
   const screen = useApp((s) => s.screen);
   useEffect(() => { appStore.getState().bootDone(); }, []);
   return <main className="phone-home" onPointerDown={(e) => { e.stopPropagation(); phoneInput(); }} onKeyDown={(e) => { e.stopPropagation(); phoneInput(); }} onScrollCapture={phoneInput}>
-    <header><svg viewBox={`0 0 ${MONOGRAM_VIEWBOX.w} ${MONOGRAM_VIEWBOX.h}`} width="42" height="36" aria-hidden="true">{MONOGRAM_PATHS.map((d, i) => <path key={i} d={d} fill="none" stroke="currentColor" strokeWidth={MONOGRAM_STROKE} />)}</svg><span>INTERNATIONAL<br />TIE DISPOSAL</span><small>AREMA / ARCADE</small></header>
+    <header><svg viewBox={`0 0 ${MONOGRAM_VIEWBOX.w} ${MONOGRAM_VIEWBOX.h}`} width="42" height="36" aria-hidden="true">{MONOGRAM_PATHS.map((d, i) => <path key={i} d={d} fill="none" stroke="currentColor" strokeWidth={MONOGRAM_STROKE} />)}</svg><span>INTERNATIONAL<br />TIE DISPOSAL</span><small>RTA / ARCADE</small></header>
     <div className="phone-home-body">
       <p className="phone-eyebrow">OLD TIES. NEW POSSIBILITIES.</p>
-      <h1>{screen === 'board' ? 'Pick your\nnext adventure.' : 'Have Some\nFun At AREMA'}</h1>
+      <h1>{screen === 'board' ? 'Pick your\nnext adventure.' : 'International Tie\nDisposal Arcade'}</h1>
       <div className="phone-prize"><Bottle /><p><strong>{ATTRACT_PRIZE.headline}</strong><span>{ATTRACT_PRIZE.reward.replace('\n', ' ')}</span></p></div>
       {screen !== 'board' ? <><button className="phone-play" onClick={() => appStore.getState().toBoard()}>TOUCH TO PLAY <span>↗</span></button><p className="phone-home-help">Six games. A little friendly competition.<br />Play upright or sideways.</p><div className="phone-track" aria-hidden="true"><span /></div></> : <>
         <p className="phone-home-help">Choose a game. Play in portrait or landscape.</p>

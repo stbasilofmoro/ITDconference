@@ -17,7 +17,7 @@ export async function submitClaim(endpoint: string, claim: PrizeClaim, claimId: 
   if (!validEndpoint(endpoint)) throw new Error('Prize claims are not connected yet. Please ask the ITD booth team to arrange your syrup.');
   const response = await send(endpoint, {
     method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, signal,
-    body: JSON.stringify({ name: claim.name.trim(), company: claim.company.trim(), phone: claim.phone.trim(), address: claim.address.trim(), _subject: 'AREMA — Beaver Crossing maple syrup prize', game: 'Beaver Crossing', levelsCompleted: 5, claimId, ...(leaderboard ? { ...leaderboard, gameId: 'beaver-crossing', submissionType: 'prize-and-leaderboard' } : {}) }),
+    body: JSON.stringify({ name: claim.name.trim(), company: claim.company.trim(), phone: claim.phone.trim(), address: claim.address.trim(), _subject: 'RTA — Beaver Crossing maple syrup prize', game: 'Beaver Crossing', levelsCompleted: 5, claimId, ...(leaderboard ? { ...leaderboard, gameId: 'beaver-crossing', submissionType: 'prize-and-leaderboard' } : {}) }),
   });
   if (!response.ok) throw new Error(response.status === 429 ? 'The prize service is busy. Please wait a moment, then try again.' : 'Your claim was not accepted. Please try again or ask the ITD booth team for help.');
 }

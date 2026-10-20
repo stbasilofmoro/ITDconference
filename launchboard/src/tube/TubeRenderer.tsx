@@ -30,7 +30,7 @@ function crtUniforms(): Record<string, THREE.IUniform> {
   return u;
 }
 
-export function TubeRenderer({ children, bezel }: { children: ReactNode; bezel?: ReactNode }) {
+export function TubeRenderer({ children }: { children: ReactNode }) {
   const size = useThree((s) => s.size);
   const phone = usePhone();
   const game = useApp((s) => s.activeGameId);
@@ -171,7 +171,6 @@ export function TubeRenderer({ children, bezel }: { children: ReactNode; bezel?:
       <mesh position={[cx, cy, 0]} material={phone ? mats.phone : mats.crt}>
         <planeGeometry args={[layout.tubeW, layout.tubeH]} />
       </mesh>
-      {bezel}
     </>
   );
 }

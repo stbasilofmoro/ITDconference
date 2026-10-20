@@ -66,7 +66,7 @@ export function Board({ games }: { games: GameDefinition[] }) {
 
   return (
     <>
-      <StackedHeadline lines={config.headlineLines} position={[LEFT_X, 460]} fontSize={120} lineHeight={128} />
+      <StackedHeadline lines={config.headlineLines} position={[LEFT_X, 460]} fontSize={108} lineHeight={116} />
       <Monogram height={150} color={colors.ink} position={[LEFT_X + 88, -110, 50]} />
       <Text font={fonts.regular} fontSize={38} color={colors.slate} anchorX="left" anchorY="middle" position={[LEFT_X, -270, 50]}>
         {config.subcopy}

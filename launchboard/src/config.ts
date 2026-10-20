@@ -17,8 +17,8 @@ export type AppConfig = {
 };
 
 export const config: AppConfig = {
-  title: 'Have Some Fun At AREMA',
-  headlineLines: ['Have', 'Some Fun', 'At AREMA'],
+  title: 'International Tie Disposal Arcade',
+  headlineLines: ['International', 'Tie Disposal', 'Arcade'],
   subcopy: 'Pick a game. Beat the yard.',
   boothNumber: '',
   tickerLines: ['Hamlet, NC', '2 million ties per year', 'Rail access: 50,000 ties per week', 'tiedisposal.com'],

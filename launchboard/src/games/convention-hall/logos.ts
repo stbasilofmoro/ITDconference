@@ -34,7 +34,7 @@ export function companyTexture(company: number, kind: 'logo' | 'badge' | 'sign' 
   const c = COMPANIES[company], canvas = document.createElement('canvas');
   canvas.width = kind === 'sign' ? 1024 : 256; canvas.height = kind === 'badge' ? 360 : kind === 'sign' ? 280 : 256;
   const g = canvas.getContext('2d')!; g.fillStyle = '#F1EBE0'; g.fillRect(0, 0, canvas.width, canvas.height);
-  if (kind === 'badge') { g.fillStyle = '#342F39'; g.fillRect(0, 0, 256, 53); g.fillStyle = '#F1EBE0'; g.font = 'bold 30px Arial'; g.textAlign = 'center'; g.fillText('AREMA', 128, 38); }
+  if (kind === 'badge') { g.fillStyle = '#342F39'; g.fillRect(0, 0, 256, 53); g.fillStyle = '#F1EBE0'; g.font = 'bold 30px Arial'; g.textAlign = 'center'; g.fillText('RTA', 128, 38); }
   g.save(); g.translate(kind === 'sign' ? 135 : 128, kind === 'badge' ? 165 : 125); g.fillStyle = g.strokeStyle = c.color; if (kind === 'badge') g.scale(0.8, 0.8); emblem(g, c.shape); g.restore();
   g.fillStyle = c.color;
   if (kind === 'sign') {

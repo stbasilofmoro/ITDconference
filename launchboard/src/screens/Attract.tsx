@@ -60,7 +60,7 @@ export function Attract() {
   return (
     <>
       <Yard />
-      <StackedHeadline lines={config.headlineLines} position={[LEFT_X, 420]} fontSize={140} lineHeight={150} />
+      <StackedHeadline lines={config.headlineLines} position={[LEFT_X, 420]} fontSize={112} lineHeight={122} />
       <group position={[LEFT_X + 38, -221, 260]} rotation={[0.08, -0.2, -0.1]} scale={85}>
         <SyrupBottle />
       </group>

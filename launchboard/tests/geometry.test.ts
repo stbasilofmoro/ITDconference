@@ -5,15 +5,15 @@ import {
 } from '../src/tube/geometry';
 
 describe('computeLayout', () => {
-  it('is 1:1 at the monitor design size', () => {
+  it('fills a 1920×1080 viewport edge to edge', () => {
     const l = computeLayout(MONITOR_W, MONITOR_H);
-    expect(l).toMatchObject({ scale: 1, monitorX: 0, monitorY: 0, tubeX: 120, tubeY: 110, tubeW: 1920, tubeH: 1080 });
+    expect(l).toMatchObject({ scale: 1, monitorX: 0, monitorY: 0, tubeX: 0, tubeY: 0, tubeW: 1920, tubeH: 1080 });
   });
-  it('letterboxes horizontally on a 1920×1080 viewport', () => {
-    const l = computeLayout(1920, 1080);
-    expect(l.scale).toBeCloseTo(1080 / 1410, 6);
-    expect(l.monitorY).toBeCloseTo(0, 6);
-    expect(l.monitorX).toBeCloseTo((1920 - 2160 * l.scale) / 2, 6);
+  it('letterboxes horizontally on a wider viewport', () => {
+    const l = computeLayout(2560, 1080);
+    expect(l.scale).toBeCloseTo(1, 6);
+    expect(l.tubeY).toBeCloseTo(0, 6);
+    expect(l.tubeX).toBeCloseTo((2560 - 1920) / 2, 6);
     expect(l.tubeW / l.tubeH).toBeCloseTo(16 / 9, 6);
   });
 });
@@ -21,8 +21,8 @@ describe('computeLayout', () => {
 describe('screenToTubeUv', () => {
   it('maps tube corners to UV corners with v up', () => {
     const l = computeLayout(MONITOR_W, MONITOR_H);
-    expect(screenToTubeUv(120, 110, l)).toEqual({ u: 0, v: 1 });
-    expect(screenToTubeUv(120 + 1920, 110 + 1080, l)).toEqual({ u: 1, v: 0 });
+    expect(screenToTubeUv(0, 0, l)).toEqual({ u: 0, v: 1 });
+    expect(screenToTubeUv(1920, 1080, l)).toEqual({ u: 1, v: 0 });
   });
 });
 

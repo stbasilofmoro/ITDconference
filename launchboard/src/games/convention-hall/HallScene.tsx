@@ -55,7 +55,7 @@ function World({ run, camera, portrait }: { run: Run; camera: PerspectiveCamera;
     {[-24.2, 27.2].map((z) => <Box key={z} at={[0, 4.5, z]} size={[36, 9, 0.4]} color="#B8B7B6" />)}
     <Box at={[0, 8.8, 1.5]} size={[36, 0.2, 54]} color="#A7A5A6" />
     {[-21, -12, -3, 6, 15, 24].map((z) => <group key={z}><Box at={[0, 7.3, z]} size={[36, 0.23, 0.3]} color="#77717D" /><Box at={[0, 7.13, z]} size={[22, 0.08, 0.55]} color="#F0ECDC" /></group>)}
-    <Text font={fonts.semibold} fontSize={1.2} position={[0, 5.7, -23.9]} color="#4B414F">AREMA / EXHIBIT HALL</Text>
+    <Text font={fonts.semibold} fontSize={1.2} position={[0, 5.7, -23.9]} color="#4B414F">RTA / EXHIBIT HALL</Text>
     <Text font={fonts.medium} fontSize={0.4} position={[0, 4.4, -23.85]} color="#695A69">GOOD CONNECTIONS START HERE.</Text>
     {BOOTHS.map((b) => <group key={b.id} position={[b.x, 0, b.z]}>
       <Box at={[0, 0.025, 0]} size={[b.w, 0.05, b.d]} color={b.id % 2 ? '#968B99' : '#A1988C'} />

@@ -1,6 +1,6 @@
 export const CONTENT_W = 1920;
 export const CONTENT_H = 1080;
-export const BEZEL = { side: 120, top: 110, bottom: 220 } as const;
+export const BEZEL = { side: 0, top: 0, bottom: 0 } as const;
 export const MONITOR_W = CONTENT_W + BEZEL.side * 2;
 export const MONITOR_H = CONTENT_H + BEZEL.top + BEZEL.bottom;
 

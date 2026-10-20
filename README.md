@@ -1,6 +1,6 @@
-# ITD at AREMA
+# ITD at RTA
 
-Booth kiosk launchboard ("Have Some Fun At AREMA") and brand identity guide for International Tie Disposal.
+Booth kiosk launchboard ("International Tie Disposal Arcade") and brand identity guide for International Tie Disposal.
 
 - `launchboard/` — Vite + React Three Fiber app rendered through a broadcast-CRT tube shader
 - `brand/` — brand identity guide (`brand/index.html`)

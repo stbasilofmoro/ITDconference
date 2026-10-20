@@ -5,8 +5,8 @@ import { colors, MONOGRAM_PATHS } from '../src/brand';
 
 describe('config', () => {
   it('has the spec defaults', () => {
-    expect(config.title).toBe('Have Some Fun At AREMA');
-    expect(config.headlineLines).toEqual(['Have', 'Some Fun', 'At AREMA']);
+    expect(config.title).toBe('International Tie Disposal Arcade');
+    expect(config.headlineLines).toEqual(['International', 'Tie Disposal', 'Arcade']);
     expect(config.idleToAttractMs).toBe(300000);
     expect(config.gameIdleExitMs).toBe(300000);
     expect(config.boothNumber).toBe('');
