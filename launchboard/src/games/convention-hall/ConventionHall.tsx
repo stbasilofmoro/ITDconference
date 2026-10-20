@@ -6,6 +6,7 @@ import { Text } from '@react-three/drei';
 import { fonts } from '../../brand';
 import type { GameContext } from '../types';
 import { appStore } from '../../state/store';
+import { paintInterval } from '../../state/quality';
 import { scoreStore } from '../../leaderboard/scores';
 import { ScoreButton } from '../../leaderboard/ScoreButton';
 import { HallScene } from './HallScene';
@@ -74,7 +75,7 @@ export default function ConventionHall({ ctx }: { ctx: GameContext }) {
       if (run.phase !== 'playing' || run.paused) touch.reset();
     } else clearControls();
     if (run.health < before) ctx.tube.pulse('static');
-    paint.current += dt; if (paint.current > 1 / 30) { paint.current = 0; refresh(); }
+    paint.current += dt; if (paint.current > paintInterval(appStore.getState().quality)) { paint.current = 0; refresh(); }
   });
   useEffect(() => {
     if (!import.meta.env.DEV || !new URLSearchParams(location.search).has('e2e')) return;

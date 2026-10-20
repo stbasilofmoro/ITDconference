@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGameAudio, snapshot } from '../../audio/useGameAudio';
 import { appStore } from '../../state/store';
+import { paintInterval } from '../../state/quality';
 import { scoreStore } from '../../leaderboard/scores';
 import type { GameContext } from '../types';
 import { interact, move, newRun, start, tick, togglePause, visit, type Run, type StationId } from './engine';
@@ -57,7 +58,7 @@ export default function TieGrader({ ctx }: { ctx: GameContext }) {
       if (run.phase !== previous && (run.phase === 'won' || run.phase === 'lost')) ctx.tube.pulse(run.phase === 'won' ? 'flash' : 'static');
     } else keys.current.clear();
     if (run.phase !== 'playing' || run.paused) keys.current.clear();
-    paint.current += dt; if (paint.current >= 1 / 30) { paint.current = 0; refresh(); }
+    paint.current += dt; if (paint.current >= paintInterval(appStore.getState().quality)) { paint.current = 0; refresh(); }
   });
   useEffect(() => {
     if (!import.meta.env.DEV || !new URLSearchParams(location.search).has('e2e')) return;

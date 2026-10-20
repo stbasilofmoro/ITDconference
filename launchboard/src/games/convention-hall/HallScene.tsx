@@ -1,4 +1,5 @@
 import { usePhone, usePortraitPhone } from '../../phone/viewport';
+import { useApp } from '../../state/store';
 import { memo, useMemo, useRef } from 'react';
 import { createPortal, useFrame, useThree } from '@react-three/fiber';
 import { Billboard, Text, useFBO } from '@react-three/drei';
@@ -43,7 +44,7 @@ const Attendee = memo(function Attendee({ person: p, scanned, winding }: { perso
     <TBox at={[0, 1.7, 0.207]} size={[winding ? 0.18 : 0.1, winding ? 0.13 : 0.028, 0.02]} color={winding ? '#756A35' : '#6F4F49'} />
     {[-1, 1].map((side) => <TBox key={side} at={[side * 0.09, 1.33, 0.24]} size={[0.02, 0.385, 0.02]} rotation={[0, 0, side * 0.487]} color="#EEE4D2" />)}
     <mesh position={[0, 1.15, 0.255]}><planeGeometry args={[0.34, 0.46]} /><meshBasicMaterial map={companyTexture(p.company, 'badge')} toneMapped={false} /></mesh>
-    <mesh position={[0, 0.014, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.52, 0.58, 20]} /><meshBasicMaterial color={scanned ? '#18BE78' : winding ? '#C7B746' : '#9A919D'} /></mesh>
+    <mesh position={[0, 0.014, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.52, 0.58, 20]} /><meshBasicMaterial color={scanned ? '#18BE78' : winding ? '#C7B746' : '#9A919D'} transparent opacity={0.18} depthWrite={false} /></mesh>
     </StaticBatch>
     {winding && <group ref={tag} position={[0, 2.6, 0]}><Billboard><Text font={fonts.semibold} fontSize={0.25} color="#F3E86D" outlineColor="#494132" outlineWidth={0.012}>BAD BREATH!</Text></Billboard></group>}
     {scanned && <Billboard position={[0, 2.65, 0]}><Text font={fonts.semibold} fontSize={0.2} color="#D8FFDE" outlineColor="#285139" outlineWidth={0.01} maxWidth={3} textAlign="center">{`${ATTENDEE_NAMES[p.id]} / ${COMPANIES[p.company].name}`}</Text></Billboard>}
@@ -93,13 +94,16 @@ export function HallScene({ run, touch = false }: { run: Run; touch?: boolean })
   const portrait = usePortraitPhone(), phone = usePhone();
   const scene = useMemo(() => { const s = new Scene(); s.background = new Color('#2B2833'); s.fog = new Fog('#2B2833', 26, 70); return s; }, []);
   const camera = useMemo(() => Object.assign(new PerspectiveCamera(68, portrait ? 720 / 1080 : 1920 / 1080, 0.06, 85), { manual: true }), [portrait]);
-  const target = useFBO(portrait ? 720 : touch ? 1280 : 1536, portrait ? 1080 : touch ? 720 : 864, { samples: touch ? 0 : 2, depthBuffer: true });
+  // Below 'pro' the hall renders at 720p without MSAA, the same trade the touch layout already
+  // makes; the CRT pass upscales it and the scanline mask hides the difference.
+  const lite = useApp((st) => st.quality) !== 'pro';
+  const target = useFBO(portrait ? 720 : touch || lite ? 1280 : 1536, portrait ? 1080 : touch || lite ? 720 : 864, { samples: touch || lite ? 0 : 2, depthBuffer: true });
   useFrame(() => {
     camera.position.set(run.x, 1.65, run.z); camera.rotation.order = 'YXZ'; camera.rotation.set(run.pitch, -run.yaw, 0); camera.updateMatrixWorld();
     const previous = gl.getRenderTarget(); gl.setRenderTarget(target); gl.clear(); gl.render(scene, camera); gl.setRenderTarget(previous);
   }, -1);
   return <>
-    {createPortal(<Outlines.Provider value={!phone}><World run={run} camera={camera} portrait={portrait} /></Outlines.Provider>, scene, { camera })}
+    {createPortal(<Outlines.Provider value={!phone && !lite}><World run={run} camera={camera} portrait={portrait} /></Outlines.Provider>, scene, { camera })}
     <mesh position={[0, 0, 0]}><planeGeometry args={[portrait ? 720 : 1920, 1080]} /><meshBasicMaterial map={target.texture} toneMapped={false} /></mesh>
   </>;
 }

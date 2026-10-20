@@ -7,6 +7,7 @@ import { RoundedBox, Text } from '@react-three/drei';
 import { Plane, Vector3 } from 'three';
 import { fonts } from '../../brand';
 import { appStore } from '../../state/store';
+import { paintInterval } from '../../state/quality';
 import type { GameContext } from '../types';
 import { KilnScene } from './KilnScene';
 import { StableLine } from '../../ui/StableLine';
@@ -128,7 +129,7 @@ export default function KilnKeeper({ ctx }: { ctx: GameContext }) {
       else if (run.phase === 'won') ctx.tube.pulse('flash');
       refresh();
     }
-    if (clock.elapsedTime - lastPaint.current >= 1 / 25) { lastPaint.current = clock.elapsedTime; refresh(); }
+    if (clock.elapsedTime - lastPaint.current >= paintInterval(appStore.getState().quality)) { lastPaint.current = clock.elapsedTime; refresh(); }
   });
   useEffect(() => {
     if (!import.meta.env.DEV || !new URLSearchParams(location.search).has('e2e')) return;

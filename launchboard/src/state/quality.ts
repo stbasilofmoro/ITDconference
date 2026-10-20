@@ -7,11 +7,27 @@ export function parseStoredOverride(value: string | null): QualityPreset | null 
   return PRESETS.includes(value as QualityPreset) ? (value as QualityPreset) : null;
 }
 
-export function resolveInitialQuality(defaultQuality: QualitySetting, stored: QualityPreset | null, hasWebGL2: boolean) {
+/**
+ * Tablet-class hardware (the KTC MegPad A25Q5 kiosk is a Snapdragon 662 / Adreno 610 Android
+ * device) cannot hold 30 fps with bloom, persistence and 4x MSAA at 1080p, and the board is too
+ * light a scene for the frame sampler to notice in time. Auto mode starts such devices on
+ * 'standard' and still lets the sampler step down from there.
+ */
+export function isMobileClassDevice(nav: { userAgent: string; userAgentData?: { mobile?: boolean } } = navigator): boolean {
+  return nav.userAgentData?.mobile === true || /Android|iPhone|iPad|Mobile/i.test(nav.userAgent);
+}
+
+export function resolveInitialQuality(defaultQuality: QualitySetting, stored: QualityPreset | null, hasWebGL2: boolean, mobileClass = false) {
   if (!hasWebGL2) return { quality: 'safe' as const, qualityOverride: stored, autoSelect: false };
   if (stored) return { quality: stored, qualityOverride: stored, autoSelect: false };
   if (defaultQuality !== 'auto') return { quality: defaultQuality, qualityOverride: null, autoSelect: false };
-  return { quality: 'pro' as const, qualityOverride: null, autoSelect: true };
+  return { quality: mobileClass ? 'standard' as const : 'pro' as const, qualityOverride: null, autoSelect: true };
+}
+
+/** How often games re-render their HUD/scene details. Motion is ref-driven and stays per-frame;
+ * on 'standard' the React pass runs at 20 Hz to leave CPU for the render itself. */
+export function paintInterval(q: QualityPreset): number {
+  return q === 'pro' ? 1 / 30 : 1 / 20;
 }
 
 export function loadStoredOverride(): QualityPreset | null {

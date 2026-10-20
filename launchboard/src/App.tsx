@@ -13,7 +13,7 @@ import { buildRegistry } from './games/registry';
 import { StudioRig } from './illustrations/StudioRig';
 import { GameHost } from './screens/GameHost';
 import { ScreenRouter } from './screens/ScreenRouter';
-import { loadStoredOverride, resolveInitialQuality } from './state/quality';
+import { isMobileClassDevice, loadStoredOverride, resolveInitialQuality } from './state/quality';
 import { appStore, useApp } from './state/store';
 import { useIdle } from './state/useIdle';
 import { CssFallback } from './tube/CssFallback';
@@ -34,7 +34,7 @@ const games = buildRegistry({ includeTestPattern: isE2e && !params.has('beaver')
 const hasWebGL2 = (() => {
   try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; }
 })();
-const initial = resolveInitialQuality(config.defaultQuality, loadStoredOverride(), hasWebGL2);
+const initial = resolveInitialQuality(config.defaultQuality, loadStoredOverride(), hasWebGL2, isMobileClassDevice());
 appStore.setState({ quality: initial.quality, qualityOverride: initial.qualityOverride, debug: params.has('debug') });
 installE2eHooks();
 
