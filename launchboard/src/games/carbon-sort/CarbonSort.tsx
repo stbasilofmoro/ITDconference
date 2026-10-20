@@ -4,7 +4,8 @@ import { PhoneButton, PhonePanel, PhonePortal } from '../../phone/PhonePortal';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { RoundedBox, Text } from '@react-three/drei';
-import type { Group } from 'three';
+import { MeshBasicMaterial, PlaneGeometry, type Group } from 'three';
+import { StaticBatch } from '../../ui/StaticBatch';
 import { fonts } from '../../brand';
 import { MaterialModel, MATERIAL_COLORS, RecoveredMaterials } from '../../illustrations/RecoveredMaterials';
 import { appStore } from '../../state/store';
@@ -46,18 +47,20 @@ function MaterialBlock({ cell, x, y, marked = false, active = false }: { cell: P
     group.current.position.set(visual.current.x, visual.current.y, 150);
     group.current.scale.setScalar(marked ? 0.88 + Math.sin(performance.now() / 55) * 0.08 : 1);
   });
-  return <group ref={group} position={[x, y, 150]}>
+  return <group ref={group} position={[x, y, 150]}><StaticBatch key={`${cell.material}/${cell.target}/${marked}/${active}`}>
     <RoundedBox args={[CELL - 4, CELL - 4, 9]} radius={5} smoothness={1}><meshBasicMaterial color={marked ? '#F0F6DC' : cell.target ? '#9D9A97' : '#D2D0CA'} toneMapped={false} /></RoundedBox>
     <mesh position={[0, -21, 6]}><planeGeometry args={[36, 4]} /><meshBasicMaterial color={MATERIAL_COLORS[cell.material]} toneMapped={false} /></mesh>
     <group position={[0, -8, 12]} rotation={[0.5, -0.35, 0]} scale={32}><MaterialModel material={cell.material} /></group>
     {cell.target && <>{[-1, 1].map((s) => <mesh key={s} position={[s * 19, 18, 30]} rotation={[0, 0, s * 0.55]}><planeGeometry args={[5, 11]} /><meshBasicMaterial color="#28252E" toneMapped={false} /></mesh>)}</>}
     {active && <mesh position={[0, -19, 32]}><circleGeometry args={[3, 8]} /><meshBasicMaterial color="#FFFFFF" toneMapped={false} /></mesh>}
-  </group>;
+  </StaticBatch></group>;
 }
 function PairLink({ cells }: { cells: { x: number; y: number }[] }) {
   if (cells.length !== 2) return null;
   return <Plate x={(cellX(cells[0].x) + cellX(cells[1].x)) / 2} y={(cellY(cells[0].y) + cellY(cells[1].y)) / 2} w={cells[0].y === cells[1].y ? CELL : 10} h={cells[0].x === cells[1].x ? CELL : 10} color="#E4DED2" z={140} />;
 }
+const CELL_GEOMETRY = new PlaneGeometry(CELL - 2, CELL - 2);
+const CELL_MATERIALS = ['#514D55', '#555159'].map((color) => new MeshBasicMaterial({ color, toneMapped: false }));
 function Chamber({ run }: { run: Run }) {
   const ghost = landingPair(run);
   const bonds = new Map<number, { x: number; y: number }[]>();
@@ -65,7 +68,7 @@ function Chamber({ run }: { run: Run }) {
   return <>
     <RoundedBox position={[BOARD_X, -22, 0]} args={[508, 902, 45]} radius={22} smoothness={2}><meshStandardMaterial color="#77767A" roughness={0.7} /></RoundedBox>
     <Plate x={BOARD_X} y={-23} w={WIDTH * CELL + 8} h={HEIGHT * CELL + 8} color="#444149" z={35} />
-    {Array.from({ length: HEIGHT }, (_, y) => Array.from({ length: WIDTH }, (_, x) => <Plate key={`${x}-${y}`} x={cellX(x)} y={cellY(y)} w={CELL - 2} h={CELL - 2} color={(x + y) % 2 ? '#514D55' : '#555159'} z={40} />))}
+    <StaticBatch>{Array.from({ length: HEIGHT }, (_, y) => Array.from({ length: WIDTH }, (_, x) => <mesh key={`${x}-${y}`} position={[cellX(x), cellY(y), 40]} geometry={CELL_GEOMETRY} material={CELL_MATERIALS[(x + y) % 2]} />))}</StaticBatch>
     <Label x={BOARD_X} y={411} size={23} color="#DFDCD5" center width={450}>MATERIAL RECOVERY CHAMBER</Label>
     <Label x={BOARD_X} y={-436} size={21} color="#DCD9D4" center width={450}>MATCH 4 / HORIZONTAL OR VERTICAL</Label>
     {ghost && pairCells(ghost).map(({ x, y }, i) => <group key={i}>
@@ -135,7 +138,7 @@ export default function CarbonSort({ ctx }: { ctx: GameContext }) {
     <Label x={-865} y={396} size={94} color="#29252E" width={480}>Carbon Sort</Label>
     <Label x={-865} y={155} size={30}>{'Small matches.\nA bigger second life.'}</Label>
     {MATERIALS.map((material, i) => <group key={material}>
-      <group position={[-815, 13 - i * 105, 350]} rotation={[0.5, -0.4, 0]} scale={58}><MaterialModel material={material} /></group>
+      <group position={[-815, 13 - i * 105, 350]} rotation={[0.5, -0.4, 0]} scale={58}><StaticBatch><MaterialModel material={material} /></StaticBatch></group>
       <Label x={-747} y={37 - i * 105} size={29}>{MATERIAL_NAMES[material]}</Label>
       <Label x={-747} y={-3 - i * 105} size={22} width={340}>{MATERIAL_USES[material]}</Label>
     </group>)}
@@ -152,7 +155,7 @@ export default function CarbonSort({ ctx }: { ctx: GameContext }) {
     <Label x={420} y={407} size={47} color="#2B2730" width={470}>{ROUND_NAMES[run.round]}</Label>
     <Plate x={637} y={291} w={435} h={130} color="#D3D0CB" />
     <Label x={444} y={335} size={23}>NEXT PAIR</Label>
-    {run.next.map((material, i) => <group key={i} position={[665 + i * 93, 282, 660]} rotation={[0.5, -0.35, 0]} scale={60}><MaterialModel material={material} /></group>)}
+    {run.next.map((material, i) => <group key={i} position={[665 + i * 93, 282, 660]} rotation={[0.5, -0.35, 0]} scale={60}><StaticBatch key={material}><MaterialModel material={material} /></StaticBatch></group>)}
     <Label x={420} y={191} size={25}>STOCK LEFT</Label>
     <Label x={420} y={146} size={66} color="#2C2931">{String(left).padStart(2, '0')}</Label>
     <Label x={635} y={190} size={25}>SCORE</Label>

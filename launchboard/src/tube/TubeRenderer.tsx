@@ -53,7 +53,10 @@ export function TubeRenderer({ children }: { children: ReactNode }) {
 
   const renderW = phone ? Math.min(1280, bounds.w) : CONTENT_W;
   const renderH = Math.round(renderW * bounds.h / bounds.w);
-  const contentRT = useFBO(renderW, renderH, { samples: phone ? 0 : 4, depthBuffer: true });
+  // Standard halves the MSAA sample count; with scanlines and the phosphor mask over it the
+  // difference is invisible, and resolve cost scales with samples.
+  const quality = useApp((s) => s.quality);
+  const contentRT = useFBO(renderW, renderH, { samples: phone ? 0 : quality === 'pro' ? 4 : 2, depthBuffer: true });
   const persistA = useFBO(phone ? 1 : CONTENT_W, phone ? 1 : CONTENT_H, { depthBuffer: false });
   const persistB = useFBO(phone ? 1 : CONTENT_W, phone ? 1 : CONTENT_H, { depthBuffer: false });
   const bloomA = useFBO(BLOOM_W, BLOOM_H, { depthBuffer: false });

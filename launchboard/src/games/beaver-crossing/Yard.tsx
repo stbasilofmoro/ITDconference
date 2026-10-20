@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import type { Group } from 'three';
 import { fonts } from '../../brand';
+import { StaticBatch } from '../../ui/StaticBatch';
 import { hazardsAt, LEVELS, playerPosition, type Hazard, type Run } from './engine';
 import { Beaver, Box, CarbonBag, CARBON, Cylinder, GREY, INK, LIGHT, ORANGE, Person, PINK, RotaryKiln, Shredder, Ties, Vehicle } from './Models';
 
@@ -140,6 +141,7 @@ export function Yard({ run }: { run: Run }) {
   });
   const level = LEVELS[run.level];
   return <group position={[245, -25, 0]} rotation={[0.85, -0.22, 0]} scale={68}>
+    <StaticBatch key={run.level}>
     <Box at={[0, -0.2, 0]} size={[14, 0.35, 14]} color="#B3B1B0" round />
     <Box at={[0, 0, 0]} size={[9.5, 0.05, 13.5]} color="#B8B7B3" />
     {Array.from({ length: 13 }, (_, row) => <group key={row} position={[0, 0.03, 6 - row]}>
@@ -148,11 +150,12 @@ export function Yard({ run }: { run: Run }) {
     </group>)}
     {level.lanes.map((l) => <Road key={l.row} row={l.row} train={l.kind === 'train'} heat={l.kind === 'heat'} />)}
     <Box at={[0, 0.05, -6]} size={[9.4, 0.04, 0.85]} color="#98B3A4" />
+    {[-4.8, 4.8].map((x) => <group key={x} position={[x, 0, -6]}><Cylinder at={[0, 0.7, 0]} radius={0.045} length={1.4} color="#747377" /><Box at={[0.28, 1.2, 0]} size={[0.55, 0.32, 0.04]} color={level.accent} /></group>)}
+    </StaticBatch>
     <Text font={fonts.semibold} fontSize={0.3} letterSpacing={0.1} color="#335645" position={[0, 0.09, -6]} rotation={[-Math.PI / 2, 0, 0]}>SAFE & SOUND</Text>
     <Text font={fonts.semibold} fontSize={0.2} letterSpacing={0.06} color="#71716E" position={[-2.5, 0.09, 6.5]} rotation={[-Math.PI / 2, 0, 0]}>START HERE</Text>
     <Machinery run={run} />
     <MovingHazards run={run} />
     <group ref={beaver}><Beaver celebrate={run.phase === 'cleared' || run.phase === 'won'} /></group>
-    {[-4.8, 4.8].map((x) => <group key={x} position={[x, 0, -6]}><Cylinder at={[0, 0.7, 0]} radius={0.045} length={1.4} color="#747377" /><Box at={[0.28, 1.2, 0]} size={[0.55, 0.32, 0.04]} color={level.accent} /></group>)}
   </group>;
 }

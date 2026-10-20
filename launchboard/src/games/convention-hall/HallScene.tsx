@@ -10,38 +10,50 @@ import { ATTENDEE_NAMES, COMPANIES } from './companies';
 import { Booth, Outlines, TBox, TCyl } from './Booth';
 import { companyTexture, decorTexture, INK } from './logos';
 import { StableLine } from '../../ui/StableLine';
+import { StaticBatch } from '../../ui/StaticBatch';
 
 const BRAND_STRIPES = ['#ED9833', '#EE6BD2', '#18BE78'];
 const BANNERS = [[21.5, '#ED9833'], [12.5, '#EE6BD2'], [3.5, '#18BE78'], [-5.5, '#ED9833'], [-14.5, '#EE6BD2']] as const;
 const LAMP = new BoxGeometry(1.6, 0.06, 0.4);
 const LAMP_MAT = new MeshBasicMaterial({ color: '#FFE7BF', toneMapped: false });
-const LANYARD: [number, number, number][] = [[-0.18, 1.5, 0.23], [0, 1.16, 0.25], [0.18, 1.5, 0.23]];
 
-function Attendee({ person: p, time }: { person: Person; time: number }) {
-  const body = p.scanned ? '#18BE78' : ['#3E4C6E', '#7A5E4F', '#55705C', '#6B4D63', '#5A6170', '#8A7A5A'][p.id % 6];
-  const skin = p.scanned ? '#61D398' : ['#D1AB8A', '#AA7D5C', '#835B48', '#E0BEA2'][p.id % 4];
-  return <group position={[p.x, 0, p.z]} rotation={[0, p.yaw, 0]}>
-    <mesh position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]}><circleGeometry args={[0.48, 16]} /><meshBasicMaterial color="#423947" transparent opacity={0.18} depthWrite={false} /></mesh>
-    {[-1, 1].map((side) => <group key={side}>
-      <group position={[side * 0.16, 0.75, 0]} rotation={[Math.sin(p.step) * 0.12 * side, 0, 0]}><TBox at={[0, -0.3, 0]} size={[0.22, 0.65, 0.25]} color={p.scanned ? '#18965D' : '#3A3640'} /><TBox at={[0, -0.69, 0.055]} size={[0.23, 0.13, 0.35]} color={p.scanned ? '#1D8157' : '#26232B'} /></group>
-      <group position={[side * 0.4, 1.26, 0]} rotation={[p.windup > 0 ? -0.9 : Math.sin(p.step) * -0.18 * side, 0, side * 0.06]}><TBox at={[0, -0.23, 0]} size={[0.18, 0.58, 0.22]} color={body} /><TBox at={[0, -0.54, 0]} size={[0.17, 0.17, 0.19]} color={skin} /></group>
+/** Continuous motion (position, heading, limbs, billboard bob) is applied straight from the
+ * mutable Person in useFrame; React only re-renders on the discrete changes memo() compares. */
+const Attendee = memo(function Attendee({ person: p, scanned, winding }: { person: Person; scanned: boolean; winding: boolean }) {
+  const root = useRef<Group>(null!), legs = useRef<(Group | null)[]>([]), arms = useRef<(Group | null)[]>([]), tag = useRef<Group>(null);
+  useFrame(({ clock }) => {
+    root.current.position.set(p.x, 0, p.z); root.current.rotation.y = p.yaw;
+    legs.current.forEach((g, i) => { if (g) g.rotation.x = Math.sin(p.step) * 0.12 * (i ? 1 : -1); });
+    arms.current.forEach((g, i) => { if (g) g.rotation.x = p.windup > 0 ? -0.9 : Math.sin(p.step) * -0.18 * (i ? 1 : -1); });
+    if (tag.current) tag.current.position.y = 2.6 + Math.sin(clock.elapsedTime * 8) * 0.03;
+  });
+  const body = scanned ? '#18BE78' : ['#3E4C6E', '#7A5E4F', '#55705C', '#6B4D63', '#5A6170', '#8A7A5A'][p.id % 6];
+  const skin = scanned ? '#61D398' : ['#D1AB8A', '#AA7D5C', '#835B48', '#E0BEA2'][p.id % 4];
+  return <group ref={root} position={[p.x, 0, p.z]} rotation={[0, p.yaw, 0]}>
+    {[-1, 1].map((side, i) => <group key={side}>
+      <group ref={(g) => { legs.current[i] = g; }} position={[side * 0.16, 0.75, 0]}><StaticBatch key={String(scanned)}><TBox at={[0, -0.3, 0]} size={[0.22, 0.65, 0.25]} color={scanned ? '#18965D' : '#3A3640'} /><TBox at={[0, -0.69, 0.055]} size={[0.23, 0.13, 0.35]} color={scanned ? '#1D8157' : '#26232B'} /></StaticBatch></group>
+      <group ref={(g) => { arms.current[i] = g; }} position={[side * 0.4, 1.26, 0]} rotation={[0, 0, side * 0.06]}><StaticBatch key={String(scanned)}><TBox at={[0, -0.23, 0]} size={[0.18, 0.58, 0.22]} color={body} /><TBox at={[0, -0.54, 0]} size={[0.17, 0.17, 0.19]} color={skin} /></StaticBatch></group>
     </group>)}
+    <StaticBatch key={`${scanned}/${winding}/${p.company}`}>
+    <mesh position={[0, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]}><circleGeometry args={[0.48, 16]} /><meshBasicMaterial color="#423947" transparent opacity={0.18} depthWrite={false} /></mesh>
     <TBox at={[0, 1.12, 0]} size={[0.7, 0.8, 0.38]} color={body} outline />
     <TBox at={[0, 1.82, 0]} size={[0.46, 0.5, 0.4]} color={skin} outline />
-    <TBox at={[0, 2.08, -0.02]} size={[0.5, 0.14, 0.44]} outline color={p.scanned ? '#238451' : ['#584436', '#514345', '#B8A393'][p.id % 3]} />
+    <TBox at={[0, 2.08, -0.02]} size={[0.5, 0.14, 0.44]} outline color={scanned ? '#238451' : ['#584436', '#514345', '#B8A393'][p.id % 3]} />
     {[-0.1, 0.1].map((x) => <TBox key={x} at={[x, 1.86, 0.207]} size={[0.035, 0.043, 0.022]} color="#322C35" />)}
-    <TBox at={[0, 1.7, 0.207]} size={[p.windup > 0 ? 0.18 : 0.1, p.windup > 0 ? 0.13 : 0.028, 0.02]} color={p.windup > 0 ? '#756A35' : '#6F4F49'} />
-    <StableLine points={LANYARD} color="#EEE4D2" lineWidth={2} />
+    <TBox at={[0, 1.7, 0.207]} size={[winding ? 0.18 : 0.1, winding ? 0.13 : 0.028, 0.02]} color={winding ? '#756A35' : '#6F4F49'} />
+    {[-1, 1].map((side) => <TBox key={side} at={[side * 0.09, 1.33, 0.24]} size={[0.02, 0.385, 0.02]} rotation={[0, 0, side * 0.487]} color="#EEE4D2" />)}
     <mesh position={[0, 1.15, 0.255]}><planeGeometry args={[0.34, 0.46]} /><meshBasicMaterial map={companyTexture(p.company, 'badge')} toneMapped={false} /></mesh>
-    <mesh position={[0, 0.014, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.52, 0.58, 20]} /><meshBasicMaterial color={p.scanned ? '#18BE78' : p.windup > 0 ? '#C7B746' : '#9A919D'} /></mesh>
-    {p.windup > 0 && <Billboard position={[0, 2.6 + Math.sin(time * 8) * 0.03, 0]}><Text font={fonts.semibold} fontSize={0.25} color="#F3E86D" outlineColor="#494132" outlineWidth={0.012}>BAD BREATH!</Text></Billboard>}
-    {p.scanned && <Billboard position={[0, 2.65, 0]}><Text font={fonts.semibold} fontSize={0.2} color="#D8FFDE" outlineColor="#285139" outlineWidth={0.01} maxWidth={3} textAlign="center">{`${ATTENDEE_NAMES[p.id]} / ${COMPANIES[p.company].name}`}</Text></Billboard>}
+    <mesh position={[0, 0.014, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.52, 0.58, 20]} /><meshBasicMaterial color={scanned ? '#18BE78' : winding ? '#C7B746' : '#9A919D'} /></mesh>
+    </StaticBatch>
+    {winding && <group ref={tag} position={[0, 2.6, 0]}><Billboard><Text font={fonts.semibold} fontSize={0.25} color="#F3E86D" outlineColor="#494132" outlineWidth={0.012}>BAD BREATH!</Text></Billboard></group>}
+    {scanned && <Billboard position={[0, 2.65, 0]}><Text font={fonts.semibold} fontSize={0.2} color="#D8FFDE" outlineColor="#285139" outlineWidth={0.01} maxWidth={3} textAlign="center">{`${ATTENDEE_NAMES[p.id]} / ${COMPANIES[p.company].name}`}</Text></Billboard>}
   </group>;
-}
+});
 /** Walls, floor, lamps and banners never change, so they skip the hall's 30 Hz re-render. */
 const HallShell = memo(function HallShell() {
   return <>
     <hemisphereLight args={['#FFF4E6', '#5A5266', 2.4]} /><directionalLight position={[8, 16, 10]} intensity={1.5} color="#FFE9CC" />
+    <StaticBatch>
     <TBox at={[0, -0.15, 1.5]} size={[38, 0.3, 55]} color="#CBC2B6" />
     <TBox at={[0, 0.015, 1.5]} size={[3.8, 0.03, 51]} color="#3B3942" />
     {[-1.96, 1.96].map((x) => <TBox key={x} at={[x, 0.02, 1.5]} size={[0.14, 0.04, 51]} color="#ED9833" />)}
@@ -60,6 +72,7 @@ const HallShell = memo(function HallShell() {
       <mesh position={[0, 6.1, 0]}><planeGeometry args={[1.3, 2.85]} /><meshBasicMaterial map={decorTexture('banner', color)} side={DoubleSide} toneMapped={false} /></mesh>
       <TCyl at={[0, 7.6, 0]} radius={0.04} length={1.6} color={INK} rotation={[0, 0, Math.PI / 2]} />
     </group>)}
+    </StaticBatch>
   </>;
 });
 function World({ run, camera, portrait }: { run: Run; camera: PerspectiveCamera; portrait: boolean }) {
@@ -69,7 +82,7 @@ function World({ run, camera, portrait }: { run: Run; camera: PerspectiveCamera;
   return <>
     <HallShell />
     {BOOTHS.map((b) => <group key={b.id} position={[b.x, 0, b.z]}><Booth company={run.boothCompanies[b.id]} number={101 + b.id} /></group>)}
-    {run.people.map((person) => <Attendee key={person.id} person={person} time={run.elapsed} />)}
+    {run.people.map((person) => <Attendee key={person.id} person={person} scanned={person.scanned} winding={person.windup > 0} />)}
     {run.breath.map((b) => <group key={b.id} position={[b.x, 1.6, b.z]}>{[0, 1, 2, 3].map((i) => <mesh key={i} position={[Math.sin(i * 2.4) * b.age * 0.35, Math.cos(i * 2.4) * b.age * 0.3, 0]} scale={0.18 + b.age * 0.28}><sphereGeometry args={[1, 8, 6]} /><meshBasicMaterial color={i % 2 ? '#C9C272' : '#A4AA55'} transparent opacity={0.52} depthWrite={false} /></mesh>)}</group>)}
     {run.beamTime > 0 && <StableLine points={[beamStart, run.beamEnd]} color="#67FFBC" lineWidth={3} />}
     <primitive object={camera}><group ref={gun} position={[portrait ? 0.16 : 0.36, -0.36, -0.64]} rotation={[0.04, -0.15, -0.08]} scale={0.75}><ScannerModel scanning={run.beamTime > 0} /><TBox at={[0, -0.27, 0.25]} size={[0.19, 0.19, 0.28]} color="#BA9377" /></group></primitive>

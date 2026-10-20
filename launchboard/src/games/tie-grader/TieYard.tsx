@@ -3,6 +3,7 @@ import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import type { Group } from 'three';
 import { fonts } from '../../brand';
+import { StaticBatch } from '../../ui/StaticBatch';
 import { RotaryKilnDisplay } from '../../illustrations/RotaryKilnDisplay';
 import { Box, CarbonBag, Cylinder, Person, Shadow, Vehicle } from '../beaver-crossing/Models';
 import { STATIONS, type Grade, type Run, type StationId, type Tie } from './engine';
@@ -77,7 +78,7 @@ function TiePile({ grade, run }: { grade: Grade; run: Run }) {
   const ties = run.piles[grade];
   return <>
     {[-0.67, 0.67].map((x) => <Box key={x} at={[x, 0.15, 0]} size={[0.14, 0.18, 1.55]} color="#8F8878" />)}
-    {ties.slice(-9).map((tie, i) => <group key={tie.id} position={[(i % 3 - 1) * 0.03, 0.34 + Math.floor(i / 3) * 0.26, (i % 3 - 1) * 0.43]} rotation={[0, grade === 'junk' ? (i % 3 - 1) * 0.075 : 0, 0]}><TieModel tie={tie} /></group>)}
+    <StaticBatch key={ties.slice(-9).map((t) => t.id).join(',')}>{ties.slice(-9).map((tie, i) => <group key={tie.id} position={[(i % 3 - 1) * 0.03, 0.34 + Math.floor(i / 3) * 0.26, (i % 3 - 1) * 0.43]} rotation={[0, grade === 'junk' ? (i % 3 - 1) * 0.075 : 0, 0]}><TieModel tie={tie} /></group>)}</StaticBatch>
     {!ties.length && <Text font={fonts.medium} fontSize={0.17} color="#8A8B7C" position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>PLACE TIES HERE</Text>}
     <StationLabel title={grade === 'grade1' ? 'GRADE 1' : grade === 'grade2' ? 'GRADE 2' : 'JUNK'} detail={`${ties.length} ${ties.length === 1 ? 'TIE' : 'TIES'} IN PILE`} color={ACCENTS[grade]} y={1.95} />
   </>;
@@ -86,6 +87,7 @@ function TiePile({ grade, run }: { grade: Grade; run: Run }) {
 function DeliveryTruck({ grade, count }: { grade: 'grade1' | 'grade2'; count: number }) {
   const color = ACCENTS[grade];
   return <>
+    <StaticBatch key={Math.min(9, count)}>
     <Shadow size={[4.25, 1.5]} />
     {[-1.25, 1.3].flatMap((x) => [-0.59, 0.59].map((z) => <group key={`${x}-${z}`}>
       <Cylinder at={[x, 0.32, z]} radius={0.31} length={0.18} color="#48494A" rotation={[Math.PI / 2, 0, 0]} />
@@ -105,6 +107,7 @@ function DeliveryTruck({ grade, count }: { grade: 'grade1' | 'grade2'; count: nu
     {[-0.46, 0.46].map((z) => <Box key={z} at={[1.99, 0.9, z]} size={[0.02, 0.14, 0.19]} color="#FFF0C1" />)}
     {[-1.75, 0.48].flatMap((x) => [-0.65, 0.65].map((z) => <Box key={`${x}-${z}`} at={[x, 1.03, z]} size={[0.07, 0.65, 0.07]} color="#818B82" />))}
     {Array.from({ length: Math.min(9, count) }, (_, i) => <group key={i} position={[-0.64, 0.94 + Math.floor(i / 3) * 0.25, (i % 3 - 1) * 0.4]}><TieModel tie={{ id: i, grade }} /></group>)}
+    </StaticBatch>
     <StationLabel title={`${grade === 'grade1' ? 'GRADE 1' : 'GRADE 2'} TRUCK · ${count}`} detail="" color={color} y={2.8} width={3.9} compact />
   </>;
 }
@@ -113,22 +116,24 @@ function JunkShredder({ run }: { run: Run }) {
   const shafts = useRef<Group>(null!);
   useFrame(({ clock }) => { shafts.current.children.forEach((g, i) => { g.rotation.x = clock.elapsedTime * (i ? -1.6 : 1.6); }); });
   return <>
+    <StaticBatch>
     <Shadow size={[3, 2]} />
     {[-1, 1].flatMap((x) => [-0.6, 0.6].map((z) => <Box key={`${x}/${z}`} at={[x, 0.52, z]} size={[0.18, 1.05, 0.2]} color="#778078" />))}
     <Box at={[0, 0.93, 0]} size={[2.6, 0.55, 1.65]} color="#A4ABA2" />
     <Box at={[0, 1.23, 0]} size={[2.25, 0.05, 1.3]} color="#353C38" />
-    <group ref={shafts}>
-      {[-0.34, 0.34].map((z) => <group key={z} position={[0, 1.28, z]}>
-        <Cylinder radius={0.18} length={2.08} rotation={[0, 0, Math.PI / 2]} color="#757C74" />
-        {[-0.85, -0.5, -0.15, 0.2, 0.55, 0.9].map((x) => <Box key={x} at={[x, 0, 0]} size={[0.15, 0.44, 0.3]} color="#BEC1B6" />)}
-      </group>)}
-    </group>
     {[-0.88, 0.88].map((z) => <Box key={z} at={[0, 1.47, z]} size={[2.85, 0.55, 0.14]} color="#AAB1A8" rotation={[Math.sign(z) * -0.25, 0, 0]} />)}
     {[-1.4, 1.4].map((x) => <Box key={x} at={[x, 1.47, 0]} size={[0.14, 0.55, 1.9]} color="#949E94" rotation={[0, 0, Math.sign(x) * 0.24]} />)}
     <Box at={[0, 0.94, 0.84]} size={[2.4, 0.23, 0.02]} color={PINK} />
     {Array.from({ length: 7 }, (_, i) => <Box key={i} at={[-1.02 + i * 0.34, 0.94, 0.86]} size={[0.13, 0.23, 0.02]} color="#414540" rotation={[0, 0, -0.4]} />)}
     <Box at={[-1.65, 0.8, 0]} size={[0.45, 0.56, 0.61]} color="#758479" />
     <Cylinder at={[-1.65, 1.11, 0]} radius={0.08} length={0.09} color={PINK} />
+    </StaticBatch>
+    <group ref={shafts}>
+      {[-0.34, 0.34].map((z) => <group key={z} position={[0, 1.28, z]}>
+        <Cylinder radius={0.18} length={2.08} rotation={[0, 0, Math.PI / 2]} color="#757C74" />
+        {[-0.85, -0.5, -0.15, 0.2, 0.55, 0.9].map((x) => <Box key={x} at={[x, 0, 0]} size={[0.15, 0.44, 0.3]} color="#BEC1B6" />)}
+      </group>)}
+    </group>
     <StationLabel title={`SHREDDER · ${run.delivered.junk}`} detail="" color={PINK} y={2.8} width={3.9} compact />
   </>;
 }
@@ -175,7 +180,7 @@ function WorkingBeaver({ run }: { run: Run }) {
       <Cylinder at={[0, 1.27, 0.04]} radius={0.37} length={0.055} color="#F4DEAB" />
       <Ball at={[0, 1.3, 0.04]} size={[0.29, 0.19, 0.265]} color="#F4DEAB" />
       <Box at={[0, 1.39, 0.12]} size={[0.075, 0.12, 0.28]} color="#E4C78F" round />
-      {run.held && <group position={[0, 0.69, 0.44]} scale={0.9}><TieModel tie={run.held.tie} />{run.held.graded && <Box at={[0, 0.13, 0]} size={[0.11, 0.02, 0.36]} color={ACCENTS[run.held.graded]} />}</group>}
+      {run.held && <group position={[0, 0.69, 0.44]} scale={0.9}><StaticBatch key={run.held.tie.id}><TieModel tie={run.held.tie} /></StaticBatch>{run.held.graded && <Box at={[0, 0.13, 0]} size={[0.11, 0.02, 0.36]} color={ACCENTS[run.held.graded]} />}</group>}
     </group>
     <group ref={leftFoot} position={[-0.23, 0.16, 0]}><Box at={[0, -0.06, 0.18]} size={[0.2, 0.14, 0.38]} color="#65503E" round /></group>
     <group ref={rightFoot} position={[0.23, 0.16, 0]}><Box at={[0, -0.06, 0.18]} size={[0.2, 0.14, 0.38]} color="#65503E" round /></group>
@@ -200,12 +205,15 @@ const PlantActivity = memo(function PlantActivity() {
     });
   });
   return <>
-    <Box at={[0, 0.035, -4.5]} size={[17, 0.045, 1.2]} color="#A4AAA2" />
-    {Array.from({ length: 18 }, (_, i) => <Box key={i} at={[-8.15 + i * 0.94, 0.065, -4.5]} size={[0.37, 0.025, 0.035]} color="#E3DFCF" />)}
     <group ref={forklift} position={[0, 0.08, -4.5]} scale={0.65}><Vehicle kind="forklift" /></group>
-    <group position={[-1.1, 0, -6.65]} scale={0.43}><RotaryKilnDisplay /></group>
     <group ref={steam} position={[0.88, 3.22, -6.65]}>{[0, 1, 2, 3].map((i) => <mesh key={i}><sphereGeometry args={[1, 8, 6]} /><meshBasicMaterial color="#D9D8D1" transparent opacity={0.24 - i * 0.035} depthWrite={false} /></mesh>)}</group>
     <group ref={crew} position={[-4.3, 0.08, -6]} scale={0.7}><Person phase={0.14} /></group>
+    <group ref={chips}>{Array.from({ length: 14 }, (_, i) => <Box key={i} at={[8.05 + Math.sin(i * 4) * 0.19, 0.61, 0]} size={[0.16 + (i % 3) * 0.04, 0.1, 0.18]} rotation={[0, i * 0.8, 0]} color={i % 3 ? '#A38359' : '#574D3E'} />)}</group>
+    <Text font={fonts.semibold} fontSize={0.19} letterSpacing={0.12} color="#616F63" position={[-6.95, 0.12, -7.7]} rotation={[-Math.PI / 2, 0, 0]}>BIOCARBON OUT</Text>
+    <group position={[-1.1, 0, -6.65]} scale={0.43}><RotaryKilnDisplay /></group>
+    <StaticBatch>
+    <Box at={[0, 0.035, -4.5]} size={[17, 0.045, 1.2]} color="#A4AAA2" />
+    {Array.from({ length: 18 }, (_, i) => <Box key={i} at={[-8.15 + i * 0.94, 0.065, -4.5]} size={[0.37, 0.025, 0.035]} color="#E3DFCF" />)}
     <group position={[3.3, 0.08, -6]} rotation={[0, -0.9, 0]} scale={0.68}><Person working /></group>
     <Box at={[4.3, 0.72, -6.5]} size={[1, 1.35, 0.62]} color="#89958B" />
     <Box at={[4.3, 0.93, -6.17]} size={[0.61, 0.42, 0.02]} color="#4E6256" />
@@ -213,14 +221,13 @@ const PlantActivity = memo(function PlantActivity() {
     <Box at={[8.05, 0.47, -0.25]} size={[0.8, 0.17, 9.5]} color="#65726B" />
     {[-4.25, -0.25, 3.75].map((z) => <Box key={z} at={[8.05, 0.23, z]} size={[0.7, 0.46, 0.17]} color="#92998F" />)}
     {[7.56, 8.54].map((x) => <Box key={x} at={[x, 0.6, -0.25]} size={[0.085, 0.15, 9.7]} color="#AEB6AA" />)}
-    <group ref={chips}>{Array.from({ length: 14 }, (_, i) => <Box key={i} at={[8.05 + Math.sin(i * 4) * 0.19, 0.61, 0]} size={[0.16 + (i % 3) * 0.04, 0.1, 0.18]} rotation={[0, i * 0.8, 0]} color={i % 3 ? '#A38359' : '#574D3E'} />)}</group>
     {[-7.6, -6.6].flatMap((x) => [-6.7, -5.65].map((z) => <group key={`${x}/${z}`} position={[x, 0.08, z]} scale={0.8}><CarbonBag /></group>))}
-    <Text font={fonts.semibold} fontSize={0.19} letterSpacing={0.12} color="#616F63" position={[-6.95, 0.12, -7.7]} rotation={[-Math.PI / 2, 0, 0]}>BIOCARBON OUT</Text>
+    </StaticBatch>
   </>;
 });
 
 const YardFloor = memo(function YardFloor() {
-  return <>
+  return <StaticBatch>
     <Box at={[0, -0.23, -1]} size={[18.4, 0.45, 14.5]} color="#A4ADA1" round />
     <Box at={[0, 0, -0.25]} size={[17.9, 0.03, 12.4]} color="#BEC2B5" />
     {[-3.75, -0.3, 3.1].map((z) => <Box key={z} at={[0, 0.028, z]} size={[17.8, 0.012, 0.025]} color="#ADBAA8" />)}
@@ -234,7 +241,7 @@ const YardFloor = memo(function YardFloor() {
       <Cylinder at={[0, 0.25, 0]} radius={0.105} length={0.07} color="#F0E8C8" />
     </group>))}
     <Text font={fonts.semibold} fontSize={0.24} letterSpacing={0.16} color="#6E7D6C" position={[0, 0.06, 5.9]} rotation={[-Math.PI / 2, 0, 0]}>RECLAIM  /  REUSE  /  RENEW</Text>
-  </>;
+  </StaticBatch>;
 });
 
 export function TieYard({ run, onStation }: { run: Run; onStation: (id: StationId) => void }) {
@@ -245,7 +252,7 @@ export function TieYard({ run, onStation }: { run: Run; onStation: (id: StationI
       {[-0.85, 0.85].flatMap((x) => [-1, 1].map((z) => <Box key={`${x}/${z}`} at={[x, 0.43, z]} size={[0.12, 0.84, 0.12]} color="#858E82" />))}
       <Box at={[0, 0.82, 0]} size={[2.5, 0.15, 2.85]} color="#8D988E" />
       {Array.from({ length: 8 }, (_, i) => <Cylinder key={i} at={[0, 0.94, -1.18 + i * 0.34]} radius={0.1} length={2.3} rotation={[0, 0, Math.PI / 2]} color="#BBC1B5" />)}
-      {run.incoming.slice(0, 5).map((tie, i) => <group key={tie.id} position={[0, 1.13 + (i === 0 ? 0.06 : 0), 1.05 - i * 0.5]}><TieModel tie={tie} /></group>)}
+      <StaticBatch key={run.incoming.slice(0, 5).map((t) => t.id).join(',')}>{run.incoming.slice(0, 5).map((tie, i) => <group key={tie.id} position={[0, 1.13 + (i === 0 ? 0.06 : 0), 1.05 - i * 0.5]}><TieModel tie={tie} /></group>)}</StaticBatch>
       <StationLabel title="INCOMING TIES" detail={`${run.incoming.length} WAITING · PICK ONE UP`} color="#5F7871" y={2.15} width={3.2} />
     </Station>
     {(['grade1', 'grade2', 'junk'] as const).map((grade) => <Station key={grade} id={grade} run={run} color={ACCENTS[grade]} onStation={onStation}><TiePile grade={grade} run={run} /></Station>)}

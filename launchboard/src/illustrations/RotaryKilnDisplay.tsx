@@ -4,6 +4,7 @@ import { DoubleSide, Object3D, type Group, type InstancedMesh, type MeshStandard
 import { tubeColors } from '../brand';
 import { Box, Cylinder } from '../games/beaver-crossing/Models';
 import { ShadowBlob } from './ShadowBlob';
+import { StaticBatch } from '../ui/StaticBatch';
 
 const STEEL = '#9A9A9A', EDGE = '#BABABA', DARK = '#77777A';
 const AXLE: [number, number, number] = [0, 0, Math.PI / 2];
@@ -46,23 +47,26 @@ export function RotaryKilnDisplay() {
   });
   return <group name="attract-rotary-kiln">
     <ShadowBlob width={16} depth={5.5} offset={[0, 0]} />
+    <StaticBatch>
     <Box at={[0.8, 0.2, 0]} size={[13.6, 0.4, 3.7]} color={DARK} />
     {[-1.8, 1.8].map((z) => <Box key={z} at={[0.8, 0.48, z]} size={[13.7, 0.14, 0.14]} color={EDGE} />)}
     {[-5, -3, -1, 1, 3, 5, 7].map((x) => <Box key={x} at={[x, 0.32, 0]} size={[0.12, 0.55, 3.8]} color={EDGE} />)}
     {[-2.7, 2.7].map((x) => <Box key={x} at={[x, 0.65, 0]} size={[1.3, 0.5, 3.4]} color={STEEL} />)}
-    <group ref={rollers}>{[-2.7, 2.7].flatMap((x) => [-1.12, 1.12].map((z) => <group key={`${x}/${z}`} position={[x, 1, z]}>
+    </StaticBatch>
+    <group ref={rollers}>{[-2.7, 2.7].flatMap((x) => [-1.12, 1.12].map((z) => <group key={`${x}/${z}`} position={[x, 1, z]}><StaticBatch>
       <Cylinder radius={0.43} length={0.85} rotation={AXLE} color={DARK} />
       {Array.from({ length: 12 }, (_, i) => <Box key={i} at={[0, Math.cos(i * Math.PI / 6) * 0.43, Math.sin(i * Math.PI / 6) * 0.43]} rotation={[i * Math.PI / 6, 0, 0]} size={[0.9, 0.08, 0.08]} color={EDGE} />)}
-    </group>))}</group>
-    <group position={[0, 2.3, 0]} ref={drum}>
+    </StaticBatch></group>))}</group>
+    <group position={[0, 2.3, 0]} ref={drum}><StaticBatch>
       <mesh rotation={AXLE}><cylinderGeometry args={[1.43, 1.43, 7.6, 48, 1, true]} /><meshStandardMaterial color={STEEL} transparent opacity={0.48} side={DoubleSide} depthWrite={false} roughness={0.55} /></mesh>
       {[-3.85, -2.7, 2.7, 3.85].map((x) => <Band key={x} x={x} width={Math.abs(x) > 3 ? 0.25 : 0.13} />)}
       {[-2.7, 2.7].flatMap((x) => Array.from({ length: 16 }, (_, i) => <Box key={`${x}/${i}`} at={[x, Math.cos(i * Math.PI / 8) * 1.52, Math.sin(i * Math.PI / 8) * 1.52]} size={[0.11, 0.1, 0.1]} color={DARK} />))}
       {[0, 1, 2, 3].map((i) => <Box key={i} at={[0, Math.cos(i * Math.PI / 2) * 1.44, Math.sin(i * Math.PI / 2) * 1.44]} size={[7.45, 0.025, 0.025]} color={EDGE} />)}
-    </group>
+    </StaticBatch></group>
     <instancedMesh ref={charge} args={[undefined, undefined, 32]} frustumCulled={false}>
       <boxGeometry args={[0.38, 0.38, 0.38]} /><meshStandardMaterial ref={glow} color={tubeColors.kilnPink} emissive={tubeColors.kilnPink} emissiveIntensity={0.5} />
     </instancedMesh>
+    <StaticBatch>
     {[-4.05, 4.05].map((x) => <Cylinder key={x} at={[x, 2.3, 0]} radius={1.12} length={0.48} rotation={AXLE} color={STEEL} />)}
     <Cylinder at={[-4.65, 2.3, 0]} radius={0.57} length={1.05} rotation={AXLE} color={DARK} />
     <Box at={[-5.2, 1.1, 0]} size={[1.45, 1.25, 1.5]} color={STEEL} />
@@ -75,5 +79,6 @@ export function RotaryKilnDisplay() {
     <Cylinder at={[4.6, 7.46, 0]} radius={0.2} length={0.03} color={DARK} />
     {[5.3, 6.3, 7.3].flatMap((x) => [-0.95, 0.95].map((z) => <Cyclone key={`${x}/${z}`} x={x} z={z} />))}
     {[-1.45, 1.45].map((z) => <group key={z}><Box at={[6.3, 2.1, z]} size={[3.1, 0.1, 0.1]} color={EDGE} /><Box at={[6.3, 0.6, z]} size={[3.1, 0.1, 0.1]} color={EDGE} /></group>)}
+    </StaticBatch>
   </group>;
 }

@@ -4,6 +4,7 @@ import { AdditiveBlending, BackSide, BoxGeometry, CylinderGeometry, DataTexture,
 import { CarbonBag } from '../beaver-crossing/Models';
 import { COMPANIES } from './companies';
 import { companyTexture, CREAM, INK } from './logos';
+import { StaticBatch } from '../../ui/StaticBatch';
 
 type V3 = [number, number, number];
 
@@ -108,6 +109,7 @@ export const Booth = memo(function Booth({ company, number }: { company: number;
   const c = COMPANIES[company], color = c.color, kind = c.booth;
   const fascia = companyTexture(company, 'fascia', number);
   return <group>
+    <StaticBatch key={`${company}/${number}`}>
     <TBox at={[0, 0.04, 0]} size={[5.2, 0.08, 3.8]} color={shade(color, -0.45)} />
     <TBox at={[0, 0.05, 0.1]} size={[4.6, 0.09, 3.2]} color={shade(color, -0.2)} />
     {kind === 'curved' ? <CurvedWall company={company} /> : <>
@@ -129,13 +131,14 @@ export const Booth = memo(function Booth({ company, number }: { company: number;
       <TBox at={[0, 0.17, 0]} size={[2.8, 0.25, 2]} color={shade(color, 0.55)} outline />
       <group position={[0, 0.3, 0]}><Equipment company={company} /></group>
     </group>}
-    {kind === 'tower' && <Tower company={company} />}
     {kind === 'arch' && <>
       {[-2.45, 2.45].map((x) => <TBox key={x} at={[x, 1.85, 1.6]} size={[0.35, 3.7, 0.35]} color={color} outline />)}
       <TBox at={[0, 3.95, 1.6]} size={[5.3, 0.55, 0.4]} color={INK} outline />
       <Panel map={fascia} at={[0, 3.95, 1.805]} size={[5.2, 0.54]} />
     </>}
     {kind === 'canopy' && <Canopy color={color} />}
+    </StaticBatch>
+    {kind === 'tower' && <Tower company={company} />}
     {kind === 'ring' && <HangingSign company={company} number={number} />}
   </group>;
 });

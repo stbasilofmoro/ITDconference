@@ -77,7 +77,7 @@ export default function App() {
         // Reuse the mobile context across games: disposing a Canvas fires a delayed
         // context-lost event that otherwise sends the next game back to the picker.
         // The hidden picker canvas has no scene and no running render loop.
-        <Canvas orthographic flat dpr={phone.enabled ? 1 : [1, 2]} camera={{ position: [0, 0, 1000], zoom: 1, near: 0.1, far: 5000 }}
+        <Canvas orthographic flat dpr={phone.enabled || quality !== 'pro' ? 1 : [1, 2]} camera={{ position: [0, 0, 1000], zoom: 1, near: 0.1, far: 5000 }}
           frameloop={phone.enabled && screen !== 'game' ? 'never' : 'always'}
           style={phone.enabled && screen !== 'game' ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}
           // The default framebuffer only ever draws the full-screen tube quad; scenes are

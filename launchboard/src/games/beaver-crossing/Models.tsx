@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { RoundedBox } from '@react-three/drei';
+import { StaticBatch } from '../../ui/StaticBatch';
 import { BoxGeometry, CircleGeometry, CylinderGeometry, MeshBasicMaterial, MeshStandardMaterial, SphereGeometry, type Group } from 'three';
 
 type V3 = [number, number, number];
@@ -89,6 +90,11 @@ function Wheels({ length = 1.4, wide = 0.75 }: { length?: number; wide?: number 
   return <>{[-1, 1].flatMap((x) => [-1, 1].map((z) => <Cylinder key={`${x}-${z}`} at={[x * length / 2, 0.25, z * wide / 2]} radius={0.25} length={0.17} rotation={[Math.PI / 2, 0, 0]} color="#555459" />))}</>;
 }
 export function Vehicle({ kind, carbon = false, phase = 0 }: { kind: 'train' | 'loader' | 'forklift' | 'truck'; carbon?: boolean; phase?: number }) {
+  // Loaders swing their arm with `phase`; the other vehicles are rigid and bake to a few draws.
+  if (kind === 'loader') return <VehicleModel kind={kind} carbon={carbon} phase={phase} />;
+  return <StaticBatch key={`${kind}/${carbon}`}><VehicleModel kind={kind} carbon={carbon} /></StaticBatch>;
+}
+function VehicleModel({ kind, carbon = false, phase = 0 }: { kind: 'train' | 'loader' | 'forklift' | 'truck'; carbon?: boolean; phase?: number }) {
   if (kind === 'train') return <group>
     <Shadow size={[4.4, 1]} /><Wheels length={3.2} wide={0.7} />
     <Box at={[0, 0.42, 0]} size={[4.4, 0.18, 0.86]} color="#78787B" />

@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import type { Group } from 'three';
 import { Box, Cylinder, Shadow } from '../beaver-crossing/Models';
 import { KilnDrum } from '../../illustrations/RotaryKiln';
+import { StaticBatch } from '../../ui/StaticBatch';
 import { BELT_END, SAFE_MAX, SAFE_MIN, type Run } from './engine';
 
 export function KilnScene({ run }: { run: Run }) {
@@ -16,19 +17,24 @@ export function KilnScene({ run }: { run: Run }) {
     <Box at={[-0.9, -0.17, 0]} size={[12, 0.25, 3.4]} color="#B5B4B3" round />
     <group ref={rumble}><KilnDrum time={run.elapsed} heat={hot} explosion={burst} /></group>
     <group position={[-4.25, 0, 0]}>
+      <StaticBatch>
       <Shadow size={[4.5, 1.5]} />
       {[-1.65, 1.65].map((x) => <Box key={x} at={[x, 0.35 + (x + 1.65) * 0.13, 0]} size={[0.18, 0.7 + (x + 1.65) * 0.26, 0.95]} color="#77777D" />)}
       <group position={[0, 1, 0]} rotation={[0, 0, 0.2]}>
         <Box size={[4.3, 0.18, 1.08]} color="#76747B" round />
         {Array.from({ length: 12 }, (_, i) => <Cylinder key={i} at={[-2 + i * 0.36, 0.05, 0]} radius={0.11} length={1.12} color="#9C9BA0" rotation={[Math.PI / 2, 0, 0]} />)}
-        {Array.from({ length: 14 }, (_, i) => <Box key={i} at={[-2.05 + ((i * 0.3 + run.beltDistance * 2.6) % 4.2), 0.17, 0]} size={[0.035, 0.035, 0.95]} color="#49464E" />)}
         {[-0.61, 0.61].map((z) => <Box key={z} at={[0, 0.24, z]} size={[4.5, 0.16, 0.08]} color="#B2B0B4" />)}
       </group>
       <Box at={[-1.65, 0.6, 0.8]} size={[0.75, 0.5, 0.55]} color="#99989D" round />
       <Cylinder at={[-1.65, 0.62, 1.1]} radius={0.2} length={0.04} rotation={[Math.PI / 2, 0, 0]} color="#747179" />
+      <Box at={[-1.85, 1.5, 0]} size={[1.25, 0.5, 1.2]} color="#9C999B" />
+      <Box at={[-1.85, 1.77, 0]} size={[1, 0.06, 0.95]} color="#625D5B" />
+      </StaticBatch>
+      {/* Belt cleats ride along with the conveyor, so they stay live. */}
+      <group position={[0, 1, 0]} rotation={[0, 0, 0.2]}>
+        {Array.from({ length: 14 }, (_, i) => <Box key={i} at={[-2.05 + ((i * 0.3 + run.beltDistance * 2.6) % 4.2), 0.17, 0]} size={[0.035, 0.035, 0.95]} color="#49464E" />)}
+      </group>
     </group>
-    <Box at={[-6.1, 1.5, 0]} size={[1.25, 0.5, 1.2]} color="#9C999B" />
-    <Box at={[-6.1, 1.77, 0]} size={[1, 0.06, 0.95]} color="#625D5B" />
     {run.pieces.map((piece) => {
       const progress = piece.progress / BELT_END;
       const drop = Math.max(0, (piece.progress - BELT_END) / 0.2);
