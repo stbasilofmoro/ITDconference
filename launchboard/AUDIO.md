@@ -9,7 +9,7 @@ Audio unlocks on the first tap or keypress. Open **Sound** at the bottom center 
 | Beaver Crossing | Gentle hop, collision, level-start and completion cues |
 | Carbon Sort | Movement and rotation blips, soft placement knocks, recycling chimes |
 | Kiln Keeper | Conveyor adjustment clicks, wood-drop knocks, quiet temperature warnings, batch outcomes |
-| Carbon Rails | Card draws, railway connection chimes, match start and completion |
+| Tie Grader | Tie-placement knocks, truck and shredder delivery chimes, shift start and completion |
 | Convention Hall | Scanner chirps, successful contact chimes, soft damage and result cues |
 | Jumper 3 | Jump and landing cues, bouncing sparks, carbon-credit chimes, power-ups, enemy defeats, damage and seals restored |
 

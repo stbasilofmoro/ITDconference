@@ -40,7 +40,7 @@ All six games include soft sound effects and an original lo-fi soundtrack. Audio
 
 Open the same deployed site in your phone's browser, including Safari on iPhone or Chrome on Android. Phones automatically get a portrait-friendly welcome screen and game picker. All six games play in portrait or landscape. Convention Hall and Jumper pause briefly when you rotate; tap Resume to continue in either orientation.
 
-The phone view uses gesture controls with the gameplay buttons hidden, cropped game views, and a full-screen CRT overlay with scanlines and glass shading. A small Menu opens options; Carbon Rails keeps card and route choices behind Routes & cards. All six games, music, prize forms, local high scores, and the five-minute idle reset remain available. Scores stay in the browser on that device.
+The phone view uses gesture controls, cropped game views, and a full-screen CRT overlay with scanlines and glass shading. Tie Grader includes station buttons for carrying ties between piles, trucks, and the shredder. A small Menu opens options. All six games, music, prize forms, local high scores, and the five-minute idle reset remain available. Scores stay in the browser on that device.
 
 No separate app download is needed. See [`launchboard/MOBILE.md`](launchboard/MOBILE.md) for controls and validation.
 
@@ -58,7 +58,7 @@ The second tile launches **Carbon Sort**, a falling-pair recycling puzzle with r
 
 The third tile launches **Kiln Keeper**. Adjust a wood conveyor to keep a rotary kiln between 700–850°C for a 90-second shift, responding to changing loads and draft. Includes a live graph, delayed heat response, cold failures, and an animated overheat rupture. See [`launchboard/KILN-KEEPER.md`](launchboard/KILN-KEEPER.md) for rules and controls.
 
-The fourth tile launches **Carbon Rails**, a globe railway game against a computer opponent. Connect biocarbon plants while the computer connects its smoky cogen plants. Real continent geography, land-only routes, cards, tickets, and final-round play are described in [`launchboard/CARBON-RAILS.md`](launchboard/CARBON-RAILS.md).
+The fourth tile launches **Tie Grader**. Play a beaver in a busy biocarbon plant with animated rotary kilns. Pick up railroad ties, inspect their condition, and place them into Grade 1, Grade 2, or Junk piles. Carry the reusable ties onto matching trucks and feed junk into the shredder. See [`launchboard/TIE-GRADER.md`](launchboard/TIE-GRADER.md) for the shift rules and controls.
 
 The fifth tile launches **Convention Hall**, a first-person badge-scanning scavenger hunt through 20 fictional railroad exhibitors. Follow company clues, scan attendees green, and stop bad-breath vendors. See [`launchboard/CONVENTION-HALL.md`](launchboard/CONVENTION-HALL.md).
 

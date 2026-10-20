@@ -1,7 +1,7 @@
 import type { Run as Beaver } from '../games/beaver-crossing/engine';
 import type { Run as Sort } from '../games/carbon-sort/engine';
 import type { Run as Kiln } from '../games/kiln-keeper/engine';
-import type { Run as Rails } from '../games/carbon-rails/engine';
+import type { Run as TieGrader } from '../games/tie-grader/engine';
 import type { Run as Hall } from '../games/convention-hall/engine';
 import type { Run as Jumper } from '../games/jumper-3/engine';
 export type Cue = 'ui' | 'start' | 'win' | 'hit' | 'hop' | 'move' | 'rotate' | 'drop' | 'recycle' | 'feed' | 'warning' | 'card' | 'route' | 'scan' | 'contact' | 'jump' | 'land' | 'spark' | 'power' | 'stomp';
@@ -10,7 +10,7 @@ export const snapshot = {
   beaver: (r: Beaver): Snapshot => ({ phase: r.phase, stage: r.level, paused: false, values: { hop: r.x + r.row * 10 } }),
   sort: (r: Sort): Snapshot => ({ phase: r.phase, stage: r.round, paused: r.paused, values: { move: r.active?.x ?? -1, rotate: r.active?.direction ?? -1, drop: r.nextId, recycle: r.recovered } }),
   kiln: (r: Kiln): Snapshot => ({ phase: r.phase, stage: 0, paused: r.paused, values: { feed: Math.round(r.feed * 20), drop: r.fed, warning: Number(r.temperature < 700 || r.temperature > 850) } }),
-  rails: (r: Rails, paused: boolean): Snapshot => ({ phase: r.phase, stage: 0, paused, values: { card: r.players[0].hand.length, route: r.owners.filter((owner) => owner !== null).length } }),
+  tieGrader: (r: TieGrader): Snapshot => ({ phase: r.phase, stage: 0, paused: r.paused, values: { drop: r.graded, recycle: r.handled } }),
   hall: (r: Hall): Snapshot => ({ phase: r.phase, stage: 0, paused: r.paused, values: { scan: r.beamTime, contact: r.found, hit: r.health } }),
   jumper: (r: Jumper): Snapshot => ({ phase: r.phase, stage: r.stage, paused: r.paused, values: { jump: Number(r.vy > 1), land: Number(r.grounded), recycle: r.credits, power: (r.power === 'spark' ? 2 : r.power === 'helmet' ? 1 : 0) + (r.core > 0 ? 3 : 0), hit: r.lives * 10 + (r.power === 'spark' ? 2 : r.power === 'helmet' ? 1 : 0), stomp: r.enemies.filter((e) => e.dead).length, spark: r.shots.reduce((max, s) => s.evil ? max : Math.max(max, s.id), 0) } }),
 };

@@ -5,7 +5,7 @@ import { BPM, musicStep } from '../src/audio/score';
 import * as beaver from '../src/games/beaver-crossing/engine';
 import * as sort from '../src/games/carbon-sort/engine';
 import * as kiln from '../src/games/kiln-keeper/engine';
-import * as rails from '../src/games/carbon-rails/engine';
+import * as tieGrader from '../src/games/tie-grader/engine';
 import * as hall from '../src/games/convention-hall/engine';
 import * as jumper from '../src/games/jumper-3/engine';
 
@@ -42,8 +42,17 @@ describe('cues follow real game events', () => {
     const r = kiln.newRun(); kiln.start(r); let before = snapshot.kiln(r); kiln.setFeed(r, 0.9); expect(changes(before, snapshot.kiln(r))).toContain('feed');
     before = snapshot.kiln(r); r.temperature = 851; expect(changes(before, snapshot.kiln(r))).toContain('warning'); before = snapshot.kiln(r); r.temperature = 855; expect(changes(before, snapshot.kiln(r))).not.toContain('warning');
   });
-  it('plays a card sound after a legal draw', () => {
-    const r = rails.newRun(20); rails.start(r); rails.keepTickets(r, r.ticketOffer.map((t) => t.id)); const before = snapshot.rails(r, false); rails.drawCard(r, -1); expect(changes(before, snapshot.rails(r, false))).toContain('card');
+  it('plays placement and recovery cues after grading and delivering a tie', () => {
+    const r = tieGrader.newRun(20); tieGrader.start(r);
+    tieGrader.visit(r, 'incoming'); tieGrader.tick(r, 2);
+    const grade = r.held!.tie.grade;
+    let before = snapshot.tieGrader(r);
+    tieGrader.visit(r, grade); tieGrader.tick(r, 2);
+    expect(changes(before, snapshot.tieGrader(r))).toContain('drop');
+    tieGrader.interact(r, grade);
+    before = snapshot.tieGrader(r);
+    tieGrader.visit(r, tieGrader.DESTINATIONS[grade]); tieGrader.tick(r, 2);
+    expect(changes(before, snapshot.tieGrader(r))).toContain('recycle');
   });
   it('plays a scanner chirp and a successful contact chime', () => {
     const r = hall.newRun(20); hall.start(r); const before = snapshot.hall(r); hall.scan(r); const cues = changes(before, snapshot.hall(r)); expect(cues).toContain('scan'); expect(cues).toContain('contact');

@@ -6,12 +6,12 @@ The welcome screen and game picker scroll in portrait or landscape. All six game
 
 ## Controls
 
-During gameplay, phones use gestures with no visible movement, jump, scan, or feed buttons. A small Menu opens the controls and exit options; games wait while this panel is open. Carbon Rails keeps its turn choices behind Routes & cards.
+During gameplay, phones use gestures for movement, jumping, scanning, and kiln feeding. Tie Grader uses visible station buttons to move and handle ties. A small Menu opens the controls and exit options; games wait while this panel is open.
 
 - **Beaver Crossing:** swipe in any direction for one hop; tap to hop forward.
 - **Carbon Sort:** swipe left/right to shift, tap or swipe up to rotate, swipe down to drop. The next pair and score remain visible.
 - **Kiln Keeper:** drag horizontally to set conveyor speed (left edge off, right edge full); tap to add wood. The temperature, feed percentage, and recovery countdown remain visible.
-- **Carbon Rails:** drag the globe to explore. Open Routes & cards for region, railway, payment, cards, tickets, zoom, and rules. Close the panel to let the computer take its turn.
+- **Tie Grader:** tap Incoming ties to walk over and pick up a tie. Inspect the condition, tap the matching grade pile to place it, tap that pile again to pick it up, then tap its truck or the shredder. Station buttons work in portrait and landscape. Menu pauses the shift.
 - **Convention Hall:** drag the left side to move, drag the right side to look, tap the right side to scan. Both thumbs work together. Menu pauses the game.
 - **Jumper 3:** hold the outer left quarter to move left, the inner left quarter to move right. Hold the right side to jump and release for a shorter jump; swipe up on the right to fire. Movement and jumping work together; slide the movement thumb to run. Menu pauses the game.
 

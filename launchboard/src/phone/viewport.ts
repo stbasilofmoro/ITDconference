@@ -30,7 +30,9 @@ export function phoneScene(game: string | null) {
   if (game === 'beaver-crossing') return { x: 245, y: 0, w: 1340, h: 1040, panel: true };
   if (game === 'carbon-sort') return { x: 25, y: -22, w: 560, h: 950, panel: true };
   if (game === 'kiln-keeper') return { x: 285, y: 0, w: 1240, h: 1040, panel: true };
-  if (game === 'carbon-rails') return { x: -390, y: 90, w: 930, h: 880, panel: true };
+  if (game === 'tie-grader') return portrait
+    ? { x: 0, y: 0, w: 1800, h: 1000, panel: false }
+    : { x: -180, y: -180, w: 2200, h: 1900, panel: false };
   return { x: 0, y: 0, w: 1920, h: 1080, panel: false };
 }
 

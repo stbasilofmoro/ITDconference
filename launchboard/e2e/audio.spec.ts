@@ -24,19 +24,25 @@ test('audio waits for interaction, produces a soft signal, and remembers indepen
   await expect.poll(async () => (await audio(page)).context).toBe('suspended'); expect(await audio(page)).toMatchObject({ music: 0.1, muted: true, voices: 0, musicSteps: 0 }); expect(errors).toEqual([]);
 });
 
-test('all six games trigger their own cues through normal keyboard play', async ({ page }) => {
+test('all six games trigger their own cues through gameplay controls', async ({ page }) => {
   test.setTimeout(120_000); const errors: string[] = []; page.on('pageerror', (e) => errors.push(e.message)); await ready(page); await page.keyboard.press('Enter');
   const games = [
     ['beaver-crossing', '__beaver', 'ArrowLeft', 'hop'], ['carbon-sort', '__carbonSort', 'ArrowRight', 'move'], ['kiln-keeper', '__kilnKeeper', 'ArrowRight', 'feed'],
-    ['carbon-rails', '__carbonRails', 'd', 'card'], ['convention-hall', '__conventionHall', 'Space', 'scan'], ['jumper-3', '__jumper3', 'Space', 'jump'],
+    ['tie-grader', '__tieGrader', 'Space', 'drop'], ['convention-hall', '__conventionHall', 'Space', 'scan'], ['jumper-3', '__jumper3', 'Space', 'jump'],
   ];
   for (const [index, [id, hook, key, cue]] of games.entries()) {
     await page.waitForFunction(() => window.__launchboard?.getState().screen === 'board'); await page.evaluate((i) => window.__launchboard!.getState().setFocus(i), index); await page.keyboard.press('Enter');
     await page.waitForFunction((name) => !!(window as unknown as Record<string, unknown>)[name], hook); await page.keyboard.press('Enter');
     await expect.poll(async () => (await audio(page)).recent.some((e) => e.game === id && e.cue === 'start')).toBe(true);
-    if (id === 'carbon-rails') { await page.keyboard.press('Enter'); await page.waitForTimeout(300); }
+    if (id === 'tie-grader') {
+      await page.getByRole('button', { name: 'Incoming ties', exact: true }).click();
+      await expect.poll(() => page.evaluate(() => !!window.__tieGrader!.getState().held)).toBe(true);
+      const grade = await page.evaluate(() => window.__tieGrader!.getState().held!.tie.grade);
+      await page.getByRole('button', { name: grade === 'grade1' ? 'Grade 1 pile' : grade === 'grade2' ? 'Grade 2 pile' : 'Junk pile', exact: true }).click();
+    }
     if (id === 'jumper-3') await page.waitForFunction(() => !window.__jumper3!.getState().wasJump);
-    await page.keyboard.press(key); await expect.poll(async () => (await audio(page)).recent.filter((e) => e.game === id).map((e) => e.cue), { message: `${id} should play ${cue}` }).toContain(cue); await page.keyboard.press('Escape');
+    if (id !== 'tie-grader') await page.keyboard.press(key);
+    await expect.poll(async () => (await audio(page)).recent.filter((e) => e.game === id).map((e) => e.cue), { message: `${id} should play ${cue}` }).toContain(cue); await page.keyboard.press('Escape');
   }
   await page.evaluate(() => window.__launchboard!.getState().toAttract()); await expect.poll(async () => (await audio(page)).context).toBe('suspended'); expect((await audio(page)).voices).toBe(0); expect(errors).toEqual([]);
 });

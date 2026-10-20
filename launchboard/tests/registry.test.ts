@@ -10,7 +10,7 @@ describe('registry', () => {
     expect(typeof BASE_GAMES[1].load).toBe('function');
     expect(BASE_GAMES[2]).toMatchObject({ id: 'kiln-keeper', title: 'Kiln Keeper', status: 'playable', illustration: 'rotaryKiln' });
     expect(typeof BASE_GAMES[2].load).toBe('function');
-    expect(BASE_GAMES[3]).toMatchObject({ id: 'carbon-rails', title: 'Carbon Rails', status: 'playable', illustration: 'globe' });
+    expect(BASE_GAMES[3]).toMatchObject({ id: 'tie-grader', title: 'Tie Grader', status: 'playable', illustration: 'tieStack' });
     expect(typeof BASE_GAMES[3].load).toBe('function');
     expect(BASE_GAMES[4]).toMatchObject({ id: 'convention-hall', title: 'Convention Hall', status: 'playable', illustration: 'badgeScanner' });
     expect(typeof BASE_GAMES[4].load).toBe('function');

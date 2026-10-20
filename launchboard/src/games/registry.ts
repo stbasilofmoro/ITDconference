@@ -9,7 +9,7 @@ export const BASE_GAMES: GameDefinition[] = [
   { id: 'beaver-crossing', title: 'Beaver Crossing', accent: 'orange', illustration: 'beaver', status: 'playable', load: () => import('./beaver-crossing/BeaverCrossing') },
   { id: 'carbon-sort', title: 'Carbon Sort', accent: 'green', illustration: 'materials', status: 'playable', load: () => import('./carbon-sort/CarbonSort') },
   { id: 'kiln-keeper', title: 'Kiln Keeper', accent: 'pink', illustration: 'rotaryKiln', status: 'playable', load: () => import('./kiln-keeper/KilnKeeper') },
-  { id: 'carbon-rails', title: 'Carbon Rails', accent: 'green', illustration: 'globe', status: 'playable', load: () => import('./carbon-rails/CarbonRails') },
+  { id: 'tie-grader', title: 'Tie Grader', accent: 'green', illustration: 'tieStack', status: 'playable', load: () => import('./tie-grader/TieGrader') },
   { id: 'convention-hall', title: 'Convention Hall', accent: 'orange', illustration: 'badgeScanner', status: 'playable', load: () => import('./convention-hall/ConventionHall') },
   { id: 'jumper-3', title: 'Jumper 3: The Legend of Atom', accent: 'pink', illustration: 'atom', status: 'playable', load: () => import('./jumper-3/Jumper3') },
 ];

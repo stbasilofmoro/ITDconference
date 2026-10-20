@@ -9,7 +9,7 @@ Each form asks for first and last name explicitly. The leaderboard stores only t
 | Beaver Crossing | 100 per row of total progress through the five levels, minus 10 per retry, minimum zero |
 | Carbon Sort | Total recycling points |
 | Kiln Keeper | 100 per second within 700–850°C, plus 10,000 for finishing the batch |
-| Carbon Rails | Number of biocarbon plants connected to their regional depots |
+| Tie Grader | 25 per correctly graded tie, 75 per truck or shredder delivery, minus 10 per grading or delivery error; minimum zero |
 | Convention Hall | 500 per clue contact, 100 per pushy vendor, 25 per other badge; winning adds 10 per second remaining and 5 per fresh-air point |
 | Jumper 3 | 50 per carbon credit, 150 per ordinary hood, 1,000 per guardian, 200 or 300 per power-up, plus 2,000 and 10 per second remaining for each restored seal |
 

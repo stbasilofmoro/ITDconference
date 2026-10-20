@@ -90,27 +90,26 @@ test('kiln phone gestures control the actual conveyor', async ({ page }) => {
   await expect.poll(() => page.evaluate(() => window.__kilnKeeper!.getState().fed)).toBeGreaterThan(fed);
   await page.screenshot({ path: 'test-results/phone-kiln.png' });
 });
-test('rail globe keeps readable ticket, route, card and payment controls', async ({ page, context }) => {
-  await launch(page, 'Carbon Rails');
-  await page.getByRole('button', { name: 'Choose your first tickets', exact: true }).tap();
-  await expect(page.getByRole('checkbox')).toHaveCount(3);
-  await page.getByRole('checkbox').first().uncheck();
-  await page.getByRole('button', { name: 'Confirm destinations', exact: true }).tap();
-  await expect(page.getByRole('combobox', { name: 'Region', exact: true })).toBeHidden();
-  await page.getByRole('button', { name: 'Routes & cards', exact: true }).tap();
-  await page.getByRole('combobox', { name: 'Region', exact: true }).selectOption('1');
-  await expect(page.getByRole('combobox', { name: 'Railway', exact: true })).toHaveValue('12');
-  await page.screenshot({ path: 'test-results/phone-rails.png' });
-  const cards = await page.evaluate(() => window.__carbonRails!.getState().players[0].hand.length);
-  await page.getByRole('button', { name: 'Draw from deck', exact: true }).tap();
-  expect(await page.evaluate(() => window.__carbonRails!.getState().players[0].hand.length)).toBe(cards + 1);
-  const deck = await page.getByRole('button', { name: 'Draw from deck', exact: true }).boundingBox();
-  const cdp = await context.newCDPSession(page);
-  const touch = { x: deck!.x + deck!.width / 2, y: deck!.y + deck!.height / 2, id: 1 };
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [touch] });
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ ...touch, y: touch.y - 80 }] });
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  expect(await page.evaluate(() => window.__carbonRails!.getState().players[0].hand.length)).toBe(cards + 1);
+test('tie grader lets the beaver carry, grade, and load ties with readable phone controls', async ({ page }) => {
+  await launch(page, 'Tie Grader');
+  await page.getByRole('button', { name: 'Start shift', exact: true }).tap();
+  await page.getByRole('button', { name: 'Incoming ties', exact: true }).tap();
+  await expect.poll(() => page.evaluate(() => !!window.__tieGrader!.getState().held)).toBe(true);
+  const grade = await page.evaluate(() => window.__tieGrader!.getState().held!.tie.grade);
+  const pile = grade === 'grade1' ? 'Grade 1 pile' : grade === 'grade2' ? 'Grade 2 pile' : 'Junk pile';
+  const destination = grade === 'grade1' ? 'Grade 1 truck' : grade === 'grade2' ? 'Grade 2 truck' : 'Shredder';
+  await page.getByRole('button', { name: pile, exact: true }).tap();
+  await expect.poll(() => page.evaluate(() => window.__tieGrader!.getState().graded)).toBe(1);
+  await page.getByRole('button', { name: pile, exact: true }).tap();
+  await expect.poll(() => page.evaluate(() => !!window.__tieGrader!.getState().held)).toBe(true);
+  await page.getByRole('button', { name: destination, exact: true }).tap();
+  await expect.poll(() => page.evaluate(() => window.__tieGrader!.getState().handled)).toBe(1);
+  await page.getByRole('button', { name: 'Menu', exact: true }).tap();
+  const elapsed = await page.evaluate(() => window.__tieGrader!.getState().elapsed);
+  await page.waitForTimeout(200);
+  expect(await page.evaluate(() => window.__tieGrader!.getState().elapsed)).toBe(elapsed);
+  await page.getByRole('button', { name: 'Resume shift', exact: true }).tap();
+  await page.screenshot({ path: 'test-results/phone-tie-grader.png' });
 });
 test('Convention Hall scanner and simultaneous touch controls fit a small iPhone', async ({ page, context }) => {
   await launch(page, 'Convention Hall');
@@ -180,12 +179,11 @@ test('all six games launch in succession using the same mobile graphics canvas',
   await home(page);
   await page.setViewportSize({ width: 844, height: 390 });
   const canvas = await page.locator('canvas').elementHandle();
-  for (const [name, start] of [['Beaver Crossing', 'Start crossing'], ['Carbon Sort', 'Start sorting'], ['Kiln Keeper', 'Start the conveyor'], ['Carbon Rails', 'Choose your first tickets'], ['Convention Hall', 'Enter the hall'], ['Jumper 3', 'Start chapter'], ['Carbon Sort', 'Start sorting']]) {
+  for (const [name, start] of [['Beaver Crossing', 'Start crossing'], ['Carbon Sort', 'Start sorting'], ['Kiln Keeper', 'Start the conveyor'], ['Tie Grader', 'Start shift'], ['Convention Hall', 'Enter the hall'], ['Jumper 3', 'Start chapter'], ['Carbon Sort', 'Start sorting']]) {
     await page.locator('.phone-game').filter({ hasText: name }).tap();
     await expect(page.getByRole('button', { name: start, exact: true })).toBeVisible();
     await page.getByRole('button', { name: start, exact: true }).tap();
-    if (name === 'Carbon Rails') await page.getByRole('button', { name: 'Confirm destinations' }).tap();
-    await page.getByRole('button', { name: name === 'Carbon Rails' ? 'Routes & cards' : 'Menu', exact: true }).tap();
+    await page.getByRole('button', { name: 'Menu', exact: true }).tap();
     await page.getByRole('button', { name: name === 'Convention Hall' || name === 'Jumper 3' ? 'Launchboard' : 'Exit to games', exact: true }).tap();
     await expect(page.locator('.phone-game')).toHaveCount(6);
     expect(await canvas!.evaluate(node => node.isConnected)).toBe(true);
@@ -195,7 +193,7 @@ test('all six games launch in succession using the same mobile graphics canvas',
 });
 
 
-for (const [title, start] of [['Beaver Crossing', 'Start crossing'], ['Carbon Sort', 'Start sorting'], ['Kiln Keeper', 'Start the conveyor'], ['Carbon Rails', 'Choose your first tickets'], ['Convention Hall', 'Enter the hall'], ['Jumper 3', 'Start chapter']]) {
+for (const [title, start] of [['Beaver Crossing', 'Start crossing'], ['Carbon Sort', 'Start sorting'], ['Kiln Keeper', 'Start the conveyor'], ['Tie Grader', 'Start shift'], ['Convention Hall', 'Enter the hall'], ['Jumper 3', 'Start chapter']]) {
   test(title + ' launches and plays upright without rotating', async ({ page, context }) => {
     const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
     await home(page);
@@ -214,14 +212,12 @@ for (const [title, start] of [['Beaver Crossing', 'Start crossing'], ['Carbon So
       await swipe(page, [130, 440], [330, 440]);
       await expect.poll(() => page.evaluate(() => window.__kilnKeeper!.getState().feed)).toBeGreaterThan(.8);
       await expect.poll(() => page.evaluate(() => window.__kilnKeeper!.getState().elapsed)).toBeGreaterThan(0);
-    } else if (title === 'Carbon Rails') {
-      await page.getByRole('button', { name: 'Confirm destinations' }).tap();
-      await swipe(page, [195, 400], [255, 400]);
-      await page.getByRole('button', { name: 'Routes & cards' }).tap();
-      const cards = await page.evaluate(() => window.__carbonRails!.getState().players[0].hand.length);
-      await page.getByRole('button', { name: 'Draw from deck' }).tap();
-      expect(await page.evaluate(() => window.__carbonRails!.getState().players[0].hand.length)).toBe(cards + 1);
-      await page.getByRole('button', { name: 'Back to game' }).tap();
+    } else if (title === 'Tie Grader') {
+      await page.getByRole('button', { name: 'Incoming ties', exact: true }).tap();
+      await expect.poll(() => page.evaluate(() => !!window.__tieGrader!.getState().held)).toBe(true);
+      const grade = await page.evaluate(() => window.__tieGrader!.getState().held!.tie.grade);
+      await page.getByRole('button', { name: grade === 'grade1' ? 'Grade 1 pile' : grade === 'grade2' ? 'Grade 2 pile' : 'Junk pile', exact: true }).tap();
+      await expect.poll(() => page.evaluate(() => window.__tieGrader!.getState().graded)).toBe(1);
     } else if (title === 'Convention Hall') {
       await page.touchscreen.tap(280, 400);
       await expect.poll(() => page.evaluate(() => window.__conventionHall!.getState().found)).toBe(1);
@@ -236,7 +232,7 @@ for (const [title, start] of [['Beaver Crossing', 'Start crossing'], ['Carbon So
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: 'test-results/portrait-' + title.replaceAll(' ', '-') + '.png' });
-    await page.getByRole('button', { name: title === 'Carbon Rails' ? 'Routes & cards' : 'Menu', exact: true }).tap();
+    await page.getByRole('button', { name: 'Menu', exact: true }).tap();
     await page.getByRole('button', { name: title === 'Convention Hall' || title === 'Jumper 3' ? 'Launchboard' : 'Exit to games', exact: true }).tap();
     await expect(page.locator('.phone-game')).toHaveCount(6);
     expect(errors).toEqual([]);
