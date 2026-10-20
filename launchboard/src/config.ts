@@ -21,7 +21,7 @@ export const config: AppConfig = {
   headlineLines: ['International', 'Tie Disposal', 'Arcade'],
   subcopy: 'Pick a game. Beat the yard.',
   boothNumber: '',
-  tickerLines: ['Hamlet, NC', '2 million ties per year', 'Rail access: 50,000 ties per week', 'tiedisposal.com'],
+  tickerLines: ['Hamlet, NC', 'more facilities incoming', 'Rail access: 50,000 ties per week', 'tiedisposal.com'],
   idleToAttractMs: 5 * 60 * 1000,
   gameIdleExitMs: 5 * 60 * 1000,
   defaultQuality: 'auto',
