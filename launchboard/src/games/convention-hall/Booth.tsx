@@ -1,9 +1,9 @@
-import { createContext, memo, useContext, useMemo, useRef } from 'react';
+import { createContext, memo, useContext, useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { AdditiveBlending, BackSide, BoxGeometry, CylinderGeometry, DataTexture, DoubleSide, MeshBasicMaterial, MeshToonMaterial, NearestFilter, RedFormat, RepeatWrapping, type Group, type Texture } from 'three';
+import { AdditiveBlending, BackSide, BoxGeometry, CylinderGeometry, DataTexture, DoubleSide, MeshBasicMaterial, MeshToonMaterial, NearestFilter, PlaneGeometry, RedFormat, RepeatWrapping, type Group } from 'three';
 import { CarbonBag } from '../beaver-crossing/Models';
 import { COMPANIES } from './companies';
-import { companyTexture, CREAM, INK } from './logos';
+import { boothAtlas, companyTexture, CREAM, INK, type AtlasRegion, type BoothAtlas } from './logos';
 import { StaticBatch } from '../../ui/StaticBatch';
 
 type V3 = [number, number, number];
@@ -42,8 +42,15 @@ export function TCyl({ at = [0, 0, 0], radius, length, color, outline = false, r
     {lines && <mesh geometry={UNIT_CYL} material={OUTLINE} scale={[radius + OL / 2, length + OL, radius + OL / 2]} />}
   </group>;
 }
-function Panel({ map, at, size, rotation }: { map: Texture; at: V3; size: [number, number]; rotation?: V3 }) {
-  return <mesh position={at} rotation={rotation}><planeGeometry args={size} /><meshBasicMaterial map={map} toneMapped={false} /></mesh>;
+/** A plane showing one region of the booth's texture atlas. */
+function Panel({ atlas, region, at, size, rotation }: { atlas: BoothAtlas; region: AtlasRegion; at: V3; size: [number, number]; rotation?: V3 }) {
+  const geometry = useMemo(() => {
+    const g = new PlaneGeometry(size[0], size[1]), [u0, v0, u1, v1] = atlas.uv(region), uv = g.attributes.uv;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, u0 + uv.getX(i) * (u1 - u0), v0 + uv.getY(i) * (v1 - v0));
+    return g;
+  }, [atlas, region, size[0], size[1]]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return <mesh position={at} rotation={rotation} geometry={geometry} material={atlas.material} />;
 }
 
 function Equipment({ company }: { company: number }) {
@@ -77,13 +84,13 @@ function Tower({ company }: { company: number }) {
 function HangingSign({ company, number }: { company: number; number: number }) {
   const ring = useRef<Group>(null!);
   useFrame(({ clock }) => { ring.current.rotation.y = Math.sin(clock.elapsedTime * 0.35 + number) * 0.6; });
-  const color = COMPANIES[company].color, map = companyTexture(company, 'fascia', number), W = 3.4;
+  const color = COMPANIES[company].color, atlas = boothAtlas(company, number), W = 3.4;
   return <>
-    <group ref={ring} position={[0, 5.6, 0]}>
+    <group ref={ring} position={[0, 5.6, 0]}><StaticBatch key={`${company}/${number}`}>
       {([[0, 0, W / 2], [Math.PI, 0, -W / 2], [Math.PI / 2, W / 2, 0], [-Math.PI / 2, -W / 2, 0]] as const).map(([ry, x, z]) =>
-        <Panel key={ry} map={map} at={[x, 0, z]} size={[W, 0.62]} rotation={[0, ry, 0]} />)}
+        <Panel key={ry} atlas={atlas} region="fascia" at={[x, 0, z]} size={[W, 0.62]} rotation={[0, ry, 0]} />)}
       {[-0.36, 0.36].map((y) => <TBox key={y} at={[0, y, 0]} size={[W + 0.1, 0.1, W + 0.1]} color={color} outline />)}
-    </group>
+    </StaticBatch></group>
     {[[-1.6, -1.6], [1.6, 1.6], [-1.6, 1.6], [1.6, -1.6]].map(([x, z]) => <TCyl key={`${x}${z}`} at={[x, 7.3, z]} radius={0.015} length={3} color={INK} />)}
   </>;
 }
@@ -107,20 +114,20 @@ function CurvedWall({ company }: { company: number }) {
  * Memoized: the hall re-renders 30×/s but a booth only changes with its props. */
 export const Booth = memo(function Booth({ company, number }: { company: number; number: number }) {
   const c = COMPANIES[company], color = c.color, kind = c.booth;
-  const fascia = companyTexture(company, 'fascia', number);
+  const atlas = boothAtlas(company, number);
   return <group>
     <StaticBatch key={`${company}/${number}`}>
     <TBox at={[0, 0.04, 0]} size={[5.2, 0.08, 3.8]} color={shade(color, -0.45)} />
     <TBox at={[0, 0.05, 0.1]} size={[4.6, 0.09, 3.2]} color={shade(color, -0.2)} />
     {kind === 'curved' ? <CurvedWall company={company} /> : <>
       <TBox at={[0, 1.6, -1.95]} size={[5.2, 3.2, 0.16]} color={CREAM} outline />
-      <Panel map={companyTexture(company, 'backwall')} at={[0, 1.6, -1.865]} size={[5, 3.03]} />
+      <Panel atlas={atlas} region="backwall" at={[0, 1.6, -1.865]} size={[5, 3.03]} />
     </>}
     <TBox at={[0, 3.5, -1.85]} size={[5.6, 0.6, 0.3]} color={INK} outline />
-    <Panel map={fascia} at={[0, 3.5, -1.695]} size={[5.5, 0.59]} />
+    <Panel atlas={atlas} region="fascia" at={[0, 3.5, -1.695]} size={[5.5, 0.59]} />
     <TBox at={[1.75, 0.55, 1.15]} size={[1.1, 1.1, 0.7]} color={color} outline />
     <TBox at={[1.75, 1.14, 1.15]} size={[1.25, 0.08, 0.82]} color={CREAM} outline />
-    <Panel map={companyTexture(company)} at={[1.75, 0.58, 1.505]} size={[0.7, 0.7]} />
+    <Panel atlas={atlas} region="logo" at={[1.75, 0.58, 1.505]} size={[0.7, 0.7]} />
     {kind === 'plinth' ? <group position={[-0.4, 0, -0.1]}>
       <TCyl at={[0, 0.27, 0]} radius={1.15} length={0.45} color={CREAM} outline />
       <TCyl at={[0, 0.06, 0]} radius={1.25} length={0.06} color={color} />
@@ -134,7 +141,7 @@ export const Booth = memo(function Booth({ company, number }: { company: number;
     {kind === 'arch' && <>
       {[-2.45, 2.45].map((x) => <TBox key={x} at={[x, 1.85, 1.6]} size={[0.35, 3.7, 0.35]} color={color} outline />)}
       <TBox at={[0, 3.95, 1.6]} size={[5.3, 0.55, 0.4]} color={INK} outline />
-      <Panel map={fascia} at={[0, 3.95, 1.805]} size={[5.2, 0.54]} />
+      <Panel atlas={atlas} region="fascia" at={[0, 3.95, 1.805]} size={[5.2, 0.54]} />
     </>}
     {kind === 'canopy' && <Canopy color={color} />}
     </StaticBatch>

@@ -1,4 +1,4 @@
-import { CanvasTexture, SRGBColorSpace } from 'three';
+import { CanvasTexture, MeshBasicMaterial, SRGBColorSpace } from 'three';
 import { fonts } from '../../brand';
 import { COMPANIES } from './companies';
 
@@ -85,6 +85,33 @@ export function companyTexture(company: number, kind: TextureKind = 'logo', boot
   const paint = () => { draw(g, company, kind, booth); t.needsUpdate = true; };
   paint(); if (fontState !== 'ready') redraws.push(paint);
   textures.set(key, t); return t;
+}
+
+// One booth's back wall, fascia and logo packed into a single 1024x1024 texture, so every
+// textured panel on a booth shares one material and bakes into one draw call.
+const ATLAS = { backwall: [0, 0, 1024, 620], fascia: [0, 620, 1024, 110], logo: [0, 730, 256, 256] } as const;
+export type AtlasRegion = keyof typeof ATLAS;
+export type BoothAtlas = { material: MeshBasicMaterial; uv(region: AtlasRegion): [number, number, number, number] };
+const atlases = new Map<string, BoothAtlas>();
+export function boothAtlas(company: number, booth: number): BoothAtlas {
+  const key = `${company}-${booth}`; if (atlases.has(key)) return atlases.get(key)!;
+  loadFont();
+  const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1024;
+  const g = canvas.getContext('2d')!, t = new CanvasTexture(canvas); t.colorSpace = SRGBColorSpace; t.anisotropy = 4;
+  const paint = () => {
+    for (const region of Object.keys(ATLAS) as AtlasRegion[]) {
+      const [x, y, w, h] = ATLAS[region];
+      g.save(); g.translate(x, y); g.beginPath(); g.rect(0, 0, w, h); g.clip(); draw(g, company, region, booth); g.restore();
+    }
+    t.needsUpdate = true;
+  };
+  paint(); if (fontState !== 'ready') redraws.push(paint);
+  const atlas: BoothAtlas = {
+    material: new MeshBasicMaterial({ map: t, toneMapped: false }),
+    // Canvas rows run top-down while texture v runs bottom-up.
+    uv: (region) => { const [x, y, w, h] = ATLAS[region]; return [x / 1024, 1 - (y + h) / 1024, (x + w) / 1024, 1 - y / 1024]; },
+  };
+  atlases.set(key, atlas); return atlas;
 }
 
 // Hall decor that isn't tied to a company: aisle banners and the end-wall sign.
