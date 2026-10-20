@@ -1,6 +1,6 @@
 # Local leaderboards
 
-All six games have a **Save score / Leaderboard** button on their final result screens. Beaver Crossing also offers it after a collision, and its winning prize form saves the final score upon acceptance. **High scores** on the launchboard opens all six rankings.
+All six games have a **Save score / Leaderboard** button on their final result screens. Beaver Crossing also offers it after a collision. **High scores** on the launchboard opens all six rankings. The all-games maple syrup claim is separate and does not add a score.
 
 Each form asks for first and last name explicitly. The leaderboard stores only those names, the game, score, result description, run ID, and date. Company, phone, and mailing address remain confined to the prize submission; they are never added to browser score storage.
 
@@ -19,7 +19,7 @@ The top ten runs per game are stored in `localStorage` under `itd.leaderboard.v1
 
 The score form saves locally first, then sends a copy with the run ID and both name fields to the existing Formspree endpoint. Network failure does not erase the local score. The form reports that the copy was not confirmed and offers a retry; it does not claim that Formspree accepted a failed request. Tests intercept all external submissions.
 
-Prize delivery is separate: the Beaver Crossing claim still requires Formspree acceptance before showing “Claim received.” On acceptance, its name and winning score are added locally. A local-storage failure does not change the accepted prize claim into a failed claim.
+Prize delivery is separate: the launchboard's all-games maple syrup claim requires Formspree acceptance before showing “Claim received.” It records reported completion of the Beat Every Game challenge and leaves local leaderboard data unchanged. Players save game scores through the games' own score buttons.
 
 ## Netlify and persistence
 

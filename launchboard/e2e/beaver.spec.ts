@@ -7,12 +7,15 @@ declare global {
     __beaver?: { getState(): Run; action(action: string): void; setScenario(level: number, row?: number, x?: number, time?: number): void };
   }
 }
-async function launch(page: Page) {
+async function board(page: Page) {
   await page.addInitScript(() => localStorage.setItem('arema.qualityOverride', 'standard'));
   await page.goto('/?e2e&beaver');
   await page.waitForFunction(() => window.__launchboard?.getState().screen === 'attract');
   await page.keyboard.press('Enter');
   await expect.poll(() => page.evaluate(() => window.__launchboard?.getState().screen)).toBe('board');
+}
+async function launch(page: Page) {
+  await board(page);
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => !!window.__beaver);
 }
@@ -45,6 +48,8 @@ test('launch, touch arrows, collision, retry, all five finishes, and private pri
     }
   }
   await page.keyboard.press('Enter');
+  await expect.poll(() => page.evaluate(() => window.__launchboard!.getState().screen)).toBe('board');
+  await page.getByRole('button', { name: 'You won all games? Get your free maple syrup', exact: true }).click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByLabel('First name').fill('Test');
   await page.getByLabel('Last name').fill('Beaver');
@@ -52,7 +57,7 @@ test('launch, touch arrows, collision, retry, all five finishes, and private pri
   await page.keyboard.type(' Jr');
   await page.getByLabel('First name').press('Backspace');
   await expect(page.getByLabel('First name')).toHaveValue('Test J');
-  expect((await state(page)).phase).toBe('won');
+  expect(await page.evaluate(() => window.__launchboard!.getState().activeGameId)).toBeNull();
   await page.getByRole('button', { name: 'Finish without submitting' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => window.__launchboard!.getState().screen)).toBe('board');
@@ -68,16 +73,20 @@ test('Formspree rejection keeps entered details; acceptance clears the form and 
     await route.fulfill({ response, body: source });
   });
   let requests = 0;
-  await page.route('https://formspree.io/f/testonly', async (route) => {
+  let claimId = '';
+  await page.route('https://formspree.io/f/**', async (route) => {
     requests++;
-    expect(route.request().postDataJSON()).toMatchObject({ name: 'Test Beaver', company: 'Example Rail', levelsCompleted: 5 });
+    const payload = route.request().postDataJSON();
+    expect(payload).toMatchObject({ name: 'Test Beaver', firstName: 'Test', lastName: 'Beaver', company: 'Example Rail', submissionType: 'all-games-prize', challenge: 'beat-every-game', completionReported: true, game: 'All games' });
+    for (const key of ['level', 'levelsCompleted', 'score', 'runId', 'gameId']) expect(payload).not.toHaveProperty(key);
+    expect(payload.claimId).toEqual(expect.any(String));
+    if (requests === 1) claimId = payload.claimId;
+    else expect(payload.claimId).toBe(claimId);
     await route.fulfill({ status: requests === 1 ? 429 : 200, contentType: 'application/json', body: requests === 1 ? '{"error":"test rate limit"}' : '{"ok":true}' });
   });
-  await launch(page);
-  await page.evaluate(() => window.__beaver!.setScenario(4, 11));
-  await page.keyboard.press('ArrowUp');
-  await expect.poll(async () => (await state(page)).phase).toBe('won');
-  await page.keyboard.press('Enter');
+  await board(page);
+  const savedBefore = await page.evaluate(() => localStorage.getItem('itd.leaderboard.v1'));
+  await page.getByRole('button', { name: 'You won all games? Get your free maple syrup', exact: true }).click();
   await page.getByLabel('First name').fill('Test');
   await page.getByLabel('Last name').fill('Beaver');
   await page.getByLabel('Company', { exact: true }).fill('Example Rail');
@@ -91,8 +100,7 @@ test('Formspree rejection keeps entered details; acceptance clears the form and 
   await expect(page.getByLabel('First name')).toHaveCount(0);
   expect(requests).toBe(2);
   const saved = await page.evaluate(() => localStorage.getItem('itd.leaderboard.v1'));
-  expect(JSON.parse(saved!)).toEqual([expect.objectContaining({ firstName: 'Test', lastName: 'Beaver', game: 'beaver-crossing' })]);
-  expect(saved).not.toContain('Example Rail'); expect(saved).not.toContain('123 Example St'); expect(saved).not.toContain('555');
+  expect(saved).toBe(savedBefore);
   await page.getByRole('button', { name: 'Back to the launchboard' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });

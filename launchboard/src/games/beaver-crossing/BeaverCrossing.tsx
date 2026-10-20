@@ -9,8 +9,7 @@ import type { GameContext } from '../types';
 import type { Action } from '../../ui/input';
 import { appStore } from '../../state/store';
 import { advance, FINISH_ROW, LEVELS, move, newRun, tick, type Run } from './engine';
-import { Beaver, SyrupBottle } from './Models';
-import { PrizePortal } from './PrizeForm';
+import { Beaver } from './Models';
 import { Yard } from './Yard';
 
 function Label({ children, x, y, size = 28, color = '#59555F', width = 370, center = false }: { children: React.ReactNode; x: number; y: number; size?: number; color?: string; width?: number; center?: boolean }) {
@@ -38,18 +37,16 @@ export default function BeaverCrossing({ ctx }: { ctx: GameContext }) {
   const run = useRef<Run>(newRun()).current;
   useGameAudio('beaver-crossing', () => snapshot.beaver(run));
   const [view, setView] = useState({ level: run.level, phase: run.phase, bestRow: 0, attempts: 0 });
-  const [claimOpen, setClaimOpen] = useState(false);
-  const claimRef = useRef(false);
   const scoreId = useRef(crypto.randomUUID());
   const refresh = useCallback(() => setView({ level: run.level, phase: run.phase, bestRow: run.bestRow, attempts: run.attempts }), [run]);
   const act = useCallback((action: Action) => {
-    if (claimRef.current || scoreStore.getState().open) return;
+    if (scoreStore.getState().open) return;
     if (action === 'select') {
-      if (run.phase === 'won') { claimRef.current = true; setClaimOpen(true); }
+      if (run.phase === 'won') ctx.exit();
       else if (run.phase !== 'playing') { advance(run); refresh(); }
       else move(run, 'up');
     } else move(run, action);
-  }, [run, refresh]);
+  }, [run, refresh, ctx.exit]);
   useEffect(() => ctx.input.subscribe(act), [ctx.input, act]);
   useFrame((_, delta) => {
     const before = run.phase, row = run.bestRow;
@@ -74,12 +71,12 @@ export default function BeaverCrossing({ ctx }: { ctx: GameContext }) {
   const panel = view.phase !== 'playing';
   const result = { id: scoreId.current, game: 'beaver-crossing' as const, score: Math.max(0, (run.level * FINISH_ROW + run.bestRow) * 100 - run.attempts * 10), detail: `${run.phase === 'won' ? 5 : run.level} levels complete / ${run.attempts} retries` };
   return <>
-    {!claimOpen && <PhonePortal><PhonePanel gestures={{ hint: "Swipe in any direction to hop. Tap to hop forward.", swipe: act, tap: () => act("up") }} title="Beaver Crossing" status={`Level ${view.level + 1} / 5 · ${level.title}`} modal={panel} exit={ctx.exit} result={view.phase === 'won' || view.phase === 'hit' ? result : undefined}>
-      {panel ? <><p>{view.phase === 'won' ? 'All five crossings complete! ITD will send you delicious maple syrup for your success.' : view.phase === 'hit' ? HIT_COPY[run.hitKind ?? 'train'] : view.phase === 'cleared' ? 'Safe and sound. Ready for the next crossing?' : level.story}</p>
+    <PhonePortal><PhonePanel gestures={{ hint: "Swipe in any direction to hop. Tap to hop forward.", swipe: act, tap: () => act("up") }} title="Beaver Crossing" status={`Level ${view.level + 1} / 5 · ${level.title}`} modal={panel} exit={ctx.exit} result={view.phase === 'won' || view.phase === 'hit' ? result : undefined}>
+      {panel ? <><p>{view.phase === 'won' ? 'All five crossings complete! Beat every game, then claim your free maple syrup from game selection.' : view.phase === 'hit' ? HIT_COPY[run.hitKind ?? 'train'] : view.phase === 'cleared' ? 'Safe and sound. Ready for the next crossing?' : level.story}</p>
         <p>Hop to the green finish row. Watch for trains, crews, and flying ties.</p>
-        <PhoneButton onPress={() => act('select')}>{view.phase === 'won' ? 'Claim my maple syrup' : view.phase === 'hit' ? 'Try this level again' : view.phase === 'cleared' ? 'Next crossing' : 'Start crossing'}</PhoneButton>
+        <PhoneButton onPress={() => act('select')}>{view.phase === 'won' ? 'Back to games' : view.phase === 'hit' ? 'Try this level again' : view.phase === 'cleared' ? 'Next crossing' : 'Start crossing'}</PhoneButton>
       </> : <><p>{view.bestRow} / {FINISH_ROW} rows · {view.attempts} retries</p><div className="phone-dpad"><PhoneButton onPress={() => act('up')}>↑</PhoneButton><PhoneButton onPress={() => act('left')}>←</PhoneButton><PhoneButton onPress={() => act('down')}>↓</PhoneButton><PhoneButton onPress={() => act('right')}>→</PhoneButton></div></>}
-    </PhonePanel></PhonePortal>}
+    </PhonePanel></PhonePortal>
     <Yard key={view.level} run={run} />
     <mesh position={[-690, 0, 1150]}><planeGeometry args={[450, 1040]} /><meshBasicMaterial color="#C4C4C4" toneMapped={false} /></mesh>
     <Label x={-865} y={455} size={25}>ITD / BEAVER CROSSING</Label>
@@ -102,16 +99,15 @@ export default function BeaverCrossing({ ctx }: { ctx: GameContext }) {
       <mesh position={[260, 25, 1500]}><planeGeometry args={[1160, 890]} /><meshBasicMaterial color="#25232A" transparent opacity={0.38} toneMapped={false} /></mesh>
       <RoundedBox position={[260, 25, 1550]} args={[830, 790, 8]} radius={18} smoothness={2}><meshBasicMaterial color="#DEDDD8" toneMapped={false} /></RoundedBox>
       <group position={[0, 0, 400]}>
-        <Label x={-90} y={360} size={23} width={720} color="#6D6563">{view.phase === 'won' ? 'FIVE CROSSINGS. ONE SWEET FINISH.' : view.phase === 'hit' ? 'A LITTLE SETBACK' : view.phase === 'cleared' ? 'SAFE & SOUND' : level.subtitle}</Label>
-        <Label x={-90} y={295} size={62} width={710} color="#29252E">{view.phase === 'won' ? 'Sweet success.' : view.phase === 'hit' ? 'Tail down. Try again.' : view.phase === 'cleared' ? 'Nice crossing.' : 'Meet your beaver.'}</Label>
-        <group position={[515, 65, 1300]} rotation={[0.12, -0.35, 0]} scale={view.phase === 'won' ? 100 : 125}>{view.phase === 'won' ? <SyrupBottle /> : <Beaver celebrate={view.phase === 'cleared'} />}</group>
-        <Label x={-90} y={166} size={32} width={430} color="#49424B">{view.phase === 'won' ? 'You made it through all five levels. ITD will send you delicious maple syrup for your success.' : view.phase === 'hit' ? HIT_COPY[run.hitKind ?? 'train'] : view.phase === 'cleared' ? `${level.title}: complete. Your next crossing is ready.` : level.story}</Label>
-        <Label x={-90} y={-35} size={27} width={690}>{view.phase === 'won' ? 'Share your name, company, phone number, and mailing address to claim your prize.' : view.phase === 'hit' ? 'Restart this level. Your completed levels are safe.' : view.phase === 'cleared' ? `Up next: ${LEVELS[Math.min(view.level + 1, 4)].title}` : 'Hop to the green finish row. Use the arrows, D-pad, or on-screen controls. Enter / A also hops forward.'}</Label>
-        <Button x={260} y={-205} width={680} height={82} onClick={() => act('select')}>{view.phase === 'won' ? 'Claim my maple syrup' : view.phase === 'hit' ? 'Try this level again' : view.phase === 'cleared' ? 'Next crossing' : 'Start crossing'}</Button>
+        <Label x={-90} y={360} size={23} width={720} color="#6D6563">{view.phase === 'won' ? 'FIVE CROSSINGS. ONE GAME COMPLETE.' : view.phase === 'hit' ? 'A LITTLE SETBACK' : view.phase === 'cleared' ? 'SAFE & SOUND' : level.subtitle}</Label>
+        <Label x={-90} y={295} size={62} width={710} color="#29252E">{view.phase === 'won' ? 'Journey complete.' : view.phase === 'hit' ? 'Tail down. Try again.' : view.phase === 'cleared' ? 'Nice crossing.' : 'Meet your beaver.'}</Label>
+        <group position={[515, 65, 1300]} rotation={[0.12, -0.35, 0]} scale={125}><Beaver celebrate={view.phase === 'cleared' || view.phase === 'won'} /></group>
+        <Label x={-90} y={166} size={32} width={430} color="#49424B">{view.phase === 'won' ? 'You made it through all five levels. Beat every game to earn your free maple syrup.' : view.phase === 'hit' ? HIT_COPY[run.hitKind ?? 'train'] : view.phase === 'cleared' ? `${level.title}: complete. Your next crossing is ready.` : level.story}</Label>
+        <Label x={-90} y={-35} size={27} width={690}>{view.phase === 'won' ? 'Won all the games? Open the maple syrup form on the game selection page.' : view.phase === 'hit' ? 'Restart this level. Your completed levels are safe.' : view.phase === 'cleared' ? `Up next: ${LEVELS[Math.min(view.level + 1, 4)].title}` : 'Hop to the green finish row. Use the arrows, D-pad, or on-screen controls. Enter / A also hops forward.'}</Label>
+        <Button x={260} y={-205} width={680} height={82} onClick={() => act('select')}>{view.phase === 'won' ? 'Back to games' : view.phase === 'hit' ? 'Try this level again' : view.phase === 'cleared' ? 'Next crossing' : 'Start crossing'}</Button>
         <Label x={260} y={-275} center width={680} size={24}>ENTER / A TO CONTINUE</Label>
         {(view.phase === 'won' || view.phase === 'hit') && <ScoreButton x={260} y={-330} z={1400} result={result} />}
       </group>
     </group>}
-    {claimOpen && <PrizePortal onExit={ctx.exit} result={result} />}
   </>;
 }

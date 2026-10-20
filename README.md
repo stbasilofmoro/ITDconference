@@ -48,11 +48,11 @@ No separate app download is needed. See [`launchboard/MOBILE.md`](launchboard/MO
 
 Edit `launchboard/src/config.ts`: `boothNumber`, `tickerLines`, `subcopy`, idle timeouts, `defaultQuality`.
 
-`ATTRACT_PRIZE` in the same file controls the touch-to-play screen's top-three maple syrup promotion. The attract scene includes a rotary kiln with a rotating drum and rollers, tumbling pink charge, feed hopper, exhaust stack, and cyclone bank modeled from the supplied reference.
+`ATTRACT_PRIZE` in the same file controls the touch-to-play screen's **Beat Every Game** maple syrup promotion. The attract scene includes a rotary kiln with a rotating drum and rollers, tumbling pink charge, feed hopper, exhaust stack, and cyclone bank modeled from the supplied reference.
 
 ## Add a game
 
-The first tile now launches **Beaver Crossing**, a five-level journey from the railroad yard to the steel plant. Complete all five levels to open the maple syrup prize form. Controls, level details, Formspree setup, and verification are documented in [`launchboard/BEAVER-CROSSING.md`](launchboard/BEAVER-CROSSING.md).
+The first tile now launches **Beaver Crossing**, a five-level journey from the railroad yard to the steel plant. Complete all five levels, save your score, and return to the other games. Controls, level details, Formspree setup, and verification are documented in [`launchboard/BEAVER-CROSSING.md`](launchboard/BEAVER-CROSSING.md).
 
 The second tile launches **Carbon Sort**, a falling-pair recycling puzzle with railroad ties, biocarbon bags, and scrap metal. Match four to recycle material, build chains, and lower the game emissions index across three rounds. See [`launchboard/CARBON-SORT.md`](launchboard/CARBON-SORT.md) for rules and controls.
 
@@ -65,6 +65,8 @@ The fifth tile launches **Convention Hall**, a first-person badge-scanning scave
 The sixth tile launches **Jumper 3: The Legend of Atom**, a three-chapter platformer starring Atom the beaver. Recover the stolen ignition seals from the hooded Order of the Hollow Ember using hardhat armor, bouncing sparks, and an Atom Core shield. Keyboard, controller, and simultaneous touch controls are included. See [`launchboard/JUMPER-3.md`](launchboard/JUMPER-3.md).
 
 All six games have local high-score leaderboards connected to first-and-last-name forms. Open **High scores** from the launchboard. Scores persist in the same browser and site origin; they do not sync across devices. See [`launchboard/LEADERBOARDS.md`](launchboard/LEADERBOARDS.md).
+
+After beating every game, choose **You won all games? Get your free maple syrup** on the launchboard. This button opens the delivery form on desktop, phones, and the graphics fallback. The claim records the player's reported completion; it does not create a game score or leaderboard entry. Personal details clear on success, exit, or the idle reset.
 
 Prize submissions use the configured ITD Formspree form by default. To override it locally, set `VITE_FORMSPREE_ENDPOINT` in `launchboard/.env.local`; for Netlify, set the site environment variable of the same name. The form confirms receipt only after Formspree accepts the submission.
 

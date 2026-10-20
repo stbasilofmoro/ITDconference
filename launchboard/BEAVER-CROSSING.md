@@ -8,7 +8,8 @@ The first launchboard tile is a five-level, original beaver crossing game. Carbo
 - Enter / Space / controller A: start, hop forward, retry, or continue.
 - Escape / controller B / the Exit button: return to the launchboard.
 - Reach the green row to complete a level. A collision restarts only the current level, with unlimited retries.
-- The maple syrup prize opens only after level five. The form clears on success, exit, or the kiosk's existing idle reset.
+- Completing level five offers score submission and **Back to games**. Enter returns to the launchboard so you can continue the other games.
+- The launchboard's **You won all games? Get your free maple syrup** button opens the all-games prize form. It records the player's reported completion. The form clears on success, exit, or the kiosk's existing idle reset.
 
 ## The five stages
 
@@ -30,13 +31,13 @@ VITE_FORMSPREE_ENDPOINT=https://formspree.io/f/YOUR_FORM_ID
 
 Use the real form ID from the Formspree dashboard and restart Vite. For a Netlify override, set the site environment variable `VITE_FORMSPREE_ENDPOINT` and rebuild. An unset or empty variable uses the default ITD form. This endpoint is public; no API key is required or included in the client.
 
-The form submits first and last name, company, phone, address, score, game name, levels completed, and stable claim/run identifiers using JSON over HTTPS. Only names and score data are saved to the local leaderboard; company, phone, and address are not persisted on the kiosk. It confirms prize receipt only after an accepted response. Rejected requests, offline errors, and timeouts show a clear message; they do not show a successful claim. See [LEADERBOARDS.md](LEADERBOARDS.md) for scoring and storage details.
+The all-games form submits first and last name, company, phone, address, and a stable claim identifier using JSON over HTTPS. Its metadata identifies the **Beat Every Game** challenge and the player's reported completion. It sends no game score, level count, or game run identifier, and creates no local leaderboard entry. Personal details are not persisted on the kiosk. It confirms prize receipt only after an accepted response. Rejected requests, offline errors, and timeouts show a clear message; they do not show a successful claim. See [LEADERBOARDS.md](LEADERBOARDS.md) for separate score submission and storage details.
 
 The game is cached after the first successful online load for offline play. Prize submission requires an internet connection. If it is unavailable, the screen directs the winner to the ITD booth team.
 
 ## Verification
 
-`npm test` includes hop/collision checks, level checkpoints, prize eligibility, a time-expanded search for a safe route through every level, and submission validation. `npm run e2e -- e2e/beaver.spec.ts` covers touch controls, retry, all five finishes, native text editing, clearing personal details, and intercepted Formspree responses. These tests do not submit real claims.
+`npm test` includes hop/collision checks, level checkpoints, a time-expanded search for a safe route through every level, and submission validation. `npm run e2e -- e2e/beaver.spec.ts e2e/syrup.spec.ts` covers touch controls, retry, all five finishes, the all-games claim button, native text editing, clearing personal details, and intercepted Formspree responses. These tests do not submit real claims.
 
 In development only, `?e2e&beaver` enables the game inspection hooks while retaining the real first tile. Normal `?e2e` retains the existing test-pattern fixture. Production builds do not expose the game level shortcuts.
 

@@ -70,7 +70,7 @@ export function Leaderboards() {
           <p className="score-muted">Your first and last name and score will appear on this booth leaderboard and be sent to ITD through Formspree.</p>
           {error && <p role="alert">{error}</p>}<button type="submit">{status === 'sending' ? 'Submitting...' : 'Submit my score'}</button>
         </fieldset></form>}
-      </> : <><small>MAKE YOUR MARK</small><h2>Six games.<br />A little friendly competition.</h2><p>Play a game, then use “Save score / Leaderboard” on the result screen. Your form connects your first and last name to that run.</p><p>Beaver Crossing prize claims also save your winning score.</p></>}</section></div>
+      </> : <><small>MAKE YOUR MARK</small><h2>Six games.<br />A little friendly competition.</h2><p>Play a game, then use “Save score / Leaderboard” on the result screen. Your form connects your first and last name to that run.</p><p>Beat every game, then open the maple syrup form on the game selection page.</p></>}</section></div>
     </div>
   </div>;
 }

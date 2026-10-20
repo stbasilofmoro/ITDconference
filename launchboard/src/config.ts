@@ -1,7 +1,7 @@
 export type QualitySetting = 'auto' | 'pro' | 'standard' | 'safe';
 
 export const ATTRACT_PRIZE = {
-  headline: 'Place in the top 3 in any game.',
+  headline: 'Beat Every Game',
   reward: 'Win a bottle of maple syrup,\nshipped right to your door.',
 };
 

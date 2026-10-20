@@ -1,5 +1,5 @@
 import { AudioControls } from './audio/AudioControls';
-import { Suspense, useEffect, type ReactNode } from 'react';
+import { Suspense, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { fonts } from './brand';
 import { PhoneHome } from './phone/PhoneHome';
 import { usePhoneViewport } from './phone/viewport';
@@ -22,6 +22,9 @@ import { TubeRenderer } from './tube/TubeRenderer';
 import { useGlobalInput } from './ui/useGlobalInput';
 import { useKiosk } from './ui/useKiosk';
 import { Leaderboards } from './leaderboard/Leaderboards';
+import { closeScores } from './leaderboard/scores';
+import { PrizePortal } from './games/beaver-crossing/PrizeForm';
+import { PrizeButton } from './ui/PrizeButton';
 
 const params = new URLSearchParams(window.location.search);
 const cfg = effectiveConfig(window.location.search);
@@ -42,6 +45,10 @@ function Monitor({ children }: { children: ReactNode }) {
 export default function App() {
   const phone = usePhoneViewport();
   const screen = useApp((s) => s.screen);
+  const [prizeOpen, setPrizeOpen] = useState(false);
+  const openPrize = useCallback(() => { closeScores(); setPrizeOpen(true); }, []);
+  const closePrize = useCallback(() => setPrizeOpen(false), []);
+  useEffect(() => { if (screen !== 'board') setPrizeOpen(false); }, [screen]);
   useEffect(() => {
     document.body.dataset.phone = String(phone.enabled);
     document.body.dataset.phoneGame = String(screen === 'game');
@@ -57,7 +64,7 @@ export default function App() {
   return (
     <>
       {phone.enabled && <style>{`@font-face{font-family:PhoneBarlow;src:url('${fonts.medium}')}@font-face{font-family:PhoneBarlow;src:url('${fonts.semibold}');font-weight:600}`}</style>}
-      {phone.enabled && screen !== 'game' && <PhoneHome games={games} />}
+      {phone.enabled && screen !== 'game' && <PhoneHome games={games} onClaim={openPrize} />}
       {!fallback && (
         // Reuse the mobile context across games: disposing a Canvas fires a delayed
         // context-lost event that otherwise sends the next game back to the picker.
@@ -98,6 +105,8 @@ export default function App() {
       {(fallback || contextLost) && (!phone.enabled || screen === 'game') && <CssFallback games={games} />}
       {debug && <DebugPanel />}
       <Leaderboards />
+      {screen === 'board' && !phone.enabled && <PrizeButton onClick={openPrize} />}
+      {screen === 'board' && prizeOpen && <PrizePortal onExit={closePrize} />}
       <AudioControls />
     </>
   );

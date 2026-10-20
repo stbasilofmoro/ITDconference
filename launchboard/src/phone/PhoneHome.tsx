@@ -4,10 +4,11 @@ import { MONOGRAM_PATHS, MONOGRAM_VIEWBOX, MONOGRAM_STROKE } from '../brand';
 import { appStore, useApp } from '../state/store';
 import type { GameDefinition } from '../games/types';
 import { phoneInput } from './PhonePortal';
+import { PrizeButton } from '../ui/PrizeButton';
 
-const descriptions = ['Hop through five stages of the carbon journey.', 'Match four. Give every material a second life.', 'Keep a rotary kiln between 700 and 850°C.', 'Connect a cleaner world, one railway at a time.', 'Follow company clues. Scan badges. Dodge bad breath.', 'A beaver, three lost seals, and an industrial adventure.'];
+const descriptions = ['Hop through five stages of the carbon journey.', 'Match four. Give every material a second life.', 'Keep a rotary kiln between 700 and 850°C.', 'Grade railroad ties. Load trucks. Shred the junk.', 'Follow company clues. Scan badges. Dodge bad breath.', 'A beaver, three lost seals, and an industrial adventure.'];
 function Bottle() { return <div className="phone-syrup" aria-hidden="true"><span>PURE<br /><b>MAPLE</b><br />SYRUP</span></div>; }
-export function PhoneHome({ games }: { games: GameDefinition[] }) {
+export function PhoneHome({ games, onClaim }: { games: GameDefinition[]; onClaim(): void }) {
   const screen = useApp((s) => s.screen);
   useEffect(() => { appStore.getState().bootDone(); }, []);
   return <main className="phone-home" onPointerDown={(e) => { e.stopPropagation(); phoneInput(); }} onKeyDown={(e) => { e.stopPropagation(); phoneInput(); }} onScrollCapture={phoneInput}>
@@ -19,6 +20,7 @@ export function PhoneHome({ games }: { games: GameDefinition[] }) {
       {screen !== 'board' ? <><button className="phone-play" onClick={() => appStore.getState().toBoard()}>TOUCH TO PLAY <span>↗</span></button><p className="phone-home-help">Six games. A little friendly competition.<br />Play upright or sideways.</p><div className="phone-track" aria-hidden="true"><span /></div></> : <>
         <p className="phone-home-help">Choose a game. Play in portrait or landscape.</p>
         <div className="phone-game-grid">{games.map((game, i) => <button key={game.id} className={`phone-game phone-${game.accent}`} onClick={() => { phoneInput(); appStore.getState().launch(game.id); }}><span className="phone-game-number">0{i + 1}</span><div><h2>{game.title}</h2><p>{descriptions[i]}</p></div><span aria-hidden="true">↗</span></button>)}</div>
+        <PrizeButton inline onClick={onClaim} />
       </>}
     </div>
   </main>;

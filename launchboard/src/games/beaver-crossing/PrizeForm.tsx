@@ -6,7 +6,7 @@ import { FORMSPREE_ENDPOINT, submitClaim, validEndpoint, type PrizeClaim } from 
 import './prize.css';
 import { saveScore, validName, type Result } from '../../leaderboard/scores';
 
-function PrizeForm({ onExit, result }: { onExit(): void; result: Result }) {
+function PrizeForm({ onExit, result }: { onExit(): void; result?: Result }) {
   const [status, setStatus] = useState<'editing' | 'sending' | 'sent'>('editing');
   const [error, setError] = useState('');
   const [claim, setClaim] = useState<PrizeClaim>({ name: '', company: '', phone: '', address: '' });
@@ -29,8 +29,12 @@ function PrizeForm({ onExit, result }: { onExit(): void; result: Result }) {
     const controller = new AbortController(); request.current = controller;
     const timer = setTimeout(() => controller.abort(), 20000);
     try {
-      await submitClaim(FORMSPREE_ENDPOINT, { ...claim, name: `${firstName.trim()} ${lastName.trim()}` }, claimId.current, controller.signal, fetch, { runId: result.id, score: result.score, firstName: firstName.trim(), lastName: lastName.trim() });
-      try { saveScore({ ...result, firstName, lastName, date: new Date().toISOString() }); } catch { setScoreWarning('Your claim and score reached ITD, but this browser could not save the local leaderboard.'); }
+      const names = { firstName: firstName.trim(), lastName: lastName.trim() };
+      await submitClaim(FORMSPREE_ENDPOINT, { ...claim, name: `${names.firstName} ${names.lastName}` }, claimId.current, controller.signal, fetch,
+        result ? { runId: result.id, score: result.score, ...names } : { kind: 'all-games', ...names });
+      if (result) {
+        try { saveScore({ ...result, firstName, lastName, date: new Date().toISOString() }); } catch { setScoreWarning('Your claim and score reached ITD, but this browser could not save the local leaderboard.'); }
+      }
       setFirstName(''); setLastName('');
       setClaim({ name: '', company: '', phone: '', address: '' }); setStatus('sent');
     } catch (err) {
@@ -52,16 +56,16 @@ function PrizeForm({ onExit, result }: { onExit(): void; result: Result }) {
         }
       }}>
       <div className="beaver-prize-story">
-        <span className="beaver-eyebrow">ITD / ALL FIVE LEVELS COMPLETE</span>
+        <span className="beaver-eyebrow">{result ? 'ITD / ALL FIVE LEVELS COMPLETE' : 'ITD / BEAT EVERY GAME'}</span>
         <h1 id="prize-title">Sweet<br />success.</h1>
         <div className="beaver-bottle" aria-hidden="true"><span>PURE<br /><b>MAPLE</b><br />SYRUP</span></div>
-        <p>You crossed the whole journey.<br />ITD will send you delicious maple syrup for your success.</p>
+        <p>{result ? <>You crossed the whole journey.<br />ITD will send you delicious maple syrup for your success.</> : <>Beat every game?<br />Share your details so ITD can arrange your free maple syrup.</>}</p>
         <span className="beaver-prize-foot">FROM OLD TIES TO NEW POSSIBILITIES.</span>
       </div>
       <div className="beaver-prize-details">
         {status === 'sent' ? <div className="beaver-sent" role="status">
           <span className="beaver-check">✓</span><h2>Claim received.</h2><p>Thank you! Your details have been sent to ITD to arrange your maple syrup.</p>
-          <p>{scoreWarning || 'Your first and last name and winning score are on this booth leaderboard.'}</p>
+          {result && <p>{scoreWarning || 'Your first and last name and winning score are on this booth leaderboard.'}</p>}
           <button autoFocus onClick={onExit}>Back to the launchboard ↗</button>
         </div> : <>
           <h2>Where should we send it?</h2>
@@ -74,7 +78,7 @@ function PrizeForm({ onExit, result }: { onExit(): void; result: Result }) {
               <label>Phone number<input name="phone" type="tel" inputMode="tel" required maxLength={40} value={claim.phone} onChange={(e) => setClaim({ ...claim, phone: e.target.value })} /></label>
               <label>Full mailing address<textarea name="address" required maxLength={600} rows={3} placeholder="Street, city, state / province, postal code, country" value={claim.address} onChange={(e) => setClaim({ ...claim, address: e.target.value })} /></label>
             </fieldset>
-            <p className="beaver-privacy">These details go to ITD through Formspree to fulfill your prize. Only your first and last name and game score appear on this booth leaderboard. Your company, phone, and mailing address are not saved on this kiosk.</p>
+            <p className="beaver-privacy">{result ? 'These details go to ITD through Formspree to fulfill your prize. Only your first and last name and game score appear on this booth leaderboard. Your company, phone, and mailing address are not saved on this kiosk.' : 'These details go to ITD through Formspree to fulfill your prize for beating every game. Your name, company, phone, and mailing address are not saved on this kiosk.'}</p>
             {!validEndpoint(FORMSPREE_ENDPOINT) && <p className="beaver-error" role="status">Prize claims are not connected yet. Please ask the ITD booth team to arrange your syrup.</p>}
             {error && <p className="beaver-error" role="alert">{error}</p>}
             <button type="submit" disabled={status === 'sending' || !validEndpoint(FORMSPREE_ENDPOINT)}>{status === 'sending' ? 'Sending your claim…' : 'Claim my maple syrup ↗'}</button>
@@ -87,8 +91,8 @@ function PrizeForm({ onExit, result }: { onExit(): void; result: Result }) {
 }
 
 // A separate DOM root keeps native, accessible form controls outside the WebGL reconciler.
-// It exists only for the winning player and is destroyed (including all field values) on exit.
-export function PrizePortal({ onExit, result }: { onExit(): void; result: Result }) {
+// It is destroyed (including all field values) on exit. No result means an all-games prize claim.
+export function PrizePortal({ onExit, result }: { onExit(): void; result?: Result }) {
   const initialResult = useRef(result).current;
   useEffect(() => {
     const host = document.createElement('div'); host.dataset.kioskForm = '';
