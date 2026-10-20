@@ -20,6 +20,14 @@ async function launch(page: Page) {
   await page.waitForFunction(() => !!window.__beaver);
 }
 const state = (page: Page) => page.evaluate(() => window.__beaver!.getState());
+async function openClaim(page: Page) {
+  const point = await page.evaluate(() => window.__launchboard!.contentToScreen(-600, -370));
+  // Canvas controls can appear after the board's lazy text and art finish loading.
+  await expect(async () => {
+    await page.mouse.click(point.px, point.py);
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 10_000 });
+}
 
 test('launch, touch arrows, collision, retry, all five finishes, and private prize fields', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', (e) => errors.push(e.message));
@@ -49,7 +57,7 @@ test('launch, touch arrows, collision, retry, all five finishes, and private pri
   }
   await page.keyboard.press('Enter');
   await expect.poll(() => page.evaluate(() => window.__launchboard!.getState().screen)).toBe('board');
-  await page.getByRole('button', { name: 'You won all games? Get your free maple syrup', exact: true }).click();
+  await openClaim(page);
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.getByLabel('First name').fill('Test');
   await page.getByLabel('Last name').fill('Beaver');
@@ -86,7 +94,7 @@ test('Formspree rejection keeps entered details; acceptance clears the form and 
   });
   await board(page);
   const savedBefore = await page.evaluate(() => localStorage.getItem('itd.leaderboard.v1'));
-  await page.getByRole('button', { name: 'You won all games? Get your free maple syrup', exact: true }).click();
+  await openClaim(page);
   await page.getByLabel('First name').fill('Test');
   await page.getByLabel('Last name').fill('Beaver');
   await page.getByLabel('Company', { exact: true }).fill('Example Rail');

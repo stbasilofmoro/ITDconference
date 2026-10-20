@@ -12,10 +12,11 @@ import { Monogram } from '../ui/Monogram';
 import { StackedHeadline } from '../ui/StackedHeadline';
 import { Ticker } from '../ui/Ticker';
 import { Tile } from '../ui/Tile';
+import { TubePrizeButton } from '../ui/TubePrizeButton';
 
 const LAUNCH_DELAY_MS = 350;
 
-export function Board({ games }: { games: GameDefinition[] }) {
+export function Board({ games, onClaim, claimFocused }: { games: GameDefinition[]; onClaim(): void; claimFocused: boolean }) {
   const focusIndex = useApp((s) => s.focusIndex);
   const [launching, setLaunching] = useState<number | null>(null);
   const [shakes, setShakes] = useState<Record<number, number>>({});
@@ -76,6 +77,7 @@ export function Board({ games }: { games: GameDefinition[] }) {
           shakeAt={shakes[i] ?? -Infinity}
           onHover={(n) => appStore.getState().setFocus(n)} onSelect={select} />
       ))}
+      <TubePrizeButton onClick={onClaim} focused={claimFocused} />
       <Ticker items={tickerItems()} y={TICKER_Y} />
     </>
   );

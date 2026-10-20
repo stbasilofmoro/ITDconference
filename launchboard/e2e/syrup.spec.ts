@@ -11,13 +11,36 @@ async function ready(page: Page, quality = 'standard') {
   await page.goto('/?e2e&beaver');
   await page.waitForFunction(screen => window.__launchboard?.getState().screen === screen, quality === 'safe' ? 'board' : 'attract');
 }
+async function openCanvasClaim(page: Page) {
+  const point = await page.evaluate(() => window.__launchboard!.contentToScreen(-600, -370));
+  expect(await page.evaluate(({ px, py }) => document.elementFromPoint(px, py)?.tagName, point)).toBe('CANVAS');
+  await expect(async () => {
+    await page.mouse.click(point.px, point.py);
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 10_000 });
+}
+
+for (const quality of ['standard', 'pro']) {
+  test(`${quality} CRT board paints and activates the syrup button through the canvas`, async ({ page }) => {
+    const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+    await ready(page, quality);
+    await page.keyboard.press('Enter');
+    await expect.poll(() => boardState(page)).toEqual({ screen: 'board', activeGameId: null });
+    await openCanvasClaim(page);
+    expect(await boardState(page)).toEqual({ screen: 'board', activeGameId: null });
+    await page.getByRole('button', { name: 'Finish without submitting', exact: true }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await page.screenshot({ path: test.info().outputPath(`${quality}-crt-claim-button.png`) });
+    expect(errors).toEqual([]);
+  });
+}
 
 test('board claim opens by keyboard without launching a game and clears private details on close and idle', async ({ page }) => {
   const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
   await ready(page);
   await page.keyboard.press('Enter');
   const claim = page.getByRole('button', { name: CLAIM_BUTTON, exact: true });
-  await expect(claim).toBeVisible();
+  await expect(claim).toHaveCount(1);
   await claim.focus(); await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog')).toBeVisible();
   expect(await boardState(page)).toEqual({ screen: 'board', activeGameId: null });
@@ -35,7 +58,7 @@ test('board claim opens by keyboard without launching a game and clears private 
   await expect.poll(() => boardState(page)).toEqual({ screen: 'attract', activeGameId: null });
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.keyboard.press('Enter');
-  await claim.click();
+  await openCanvasClaim(page);
   await expect(page.getByLabel('Company', { exact: true })).toHaveValue('');
   expect(await page.evaluate(() => localStorage.getItem('itd.leaderboard.v1'))).toBeNull();
   await page.getByRole('button', { name: 'Finish without submitting', exact: true }).click();
@@ -45,11 +68,19 @@ test('board claim opens by keyboard without launching a game and clears private 
 test('CSS fallback keeps the all-games claim reachable without starting a game', async ({ page }) => {
   await ready(page, 'safe');
   await expect(page.getByTestId('css-fallback')).toBeVisible();
-  await page.getByRole('button', { name: CLAIM_BUTTON, exact: true }).click();
+  const claim = page.getByRole('button', { name: CLAIM_BUTTON, exact: true });
+  const mask = await claim.evaluate(button => {
+    const tube = button.closest('.fb-tube');
+    const overlay = tube?.querySelector('.fb-mask');
+    return { insideTube: !!tube, maskFollows: !!overlay && !!(button.compareDocumentPosition(overlay) & Node.DOCUMENT_POSITION_FOLLOWING), maskAllowsClicks: !!overlay && getComputedStyle(overlay).pointerEvents === 'none' };
+  });
+  expect(mask).toEqual({ insideTube: true, maskFollows: true, maskAllowsClicks: true });
+  await claim.click();
   await expect(page.getByRole('dialog')).toBeVisible();
   expect(await boardState(page)).toEqual({ screen: 'board', activeGameId: null });
   await page.getByRole('button', { name: 'Finish without submitting', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.screenshot({ path: test.info().outputPath('fallback-crt-claim-button.png') });
 });
 
 test.describe('phone syrup claim', () => {

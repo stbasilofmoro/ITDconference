@@ -8,6 +8,7 @@ import { appStore, useApp } from '../state/store';
 import { moveFocus } from '../ui/focus';
 import { inputBus } from '../ui/inputBus';
 import { accentColor } from '../ui/layout';
+import { PrizeButton } from '../ui/PrizeButton';
 
 const css = `
 @font-face { font-family: 'Barlow'; font-weight: 400; src: url('${asset('fonts/Barlow-Regular.ttf')}'); }
@@ -39,7 +40,7 @@ const css = `
   box-shadow: inset 0 0 12vmin rgba(0,0,0,.5); }
 `;
 
-export function CssFallback({ games }: { games: GameDefinition[] }) {
+export function CssFallback({ games, onClaim }: { games: GameDefinition[]; onClaim(): void }) {
   const focusIndex = useApp((s) => s.focusIndex);
   const [note, setNote] = useState(false);
 
@@ -103,6 +104,7 @@ export function CssFallback({ games }: { games: GameDefinition[] }) {
           </div>
         </div>
         <div className="fb-ticker"><span>{tickerItems().join('     ·     ')}</span></div>
+        <PrizeButton onClick={onClaim} />
         {note && <div className="fb-note">This game needs the full tube</div>}
         <div className="fb-mask" />
       </div>

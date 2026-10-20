@@ -1,5 +1,5 @@
 import { AudioControls } from './audio/AudioControls';
-import { Suspense, useCallback, useEffect, useState, type ReactNode } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { fonts } from './brand';
 import { PhoneHome } from './phone/PhoneHome';
 import { usePhoneViewport } from './phone/viewport';
@@ -46,9 +46,17 @@ export default function App() {
   const phone = usePhoneViewport();
   const screen = useApp((s) => s.screen);
   const [prizeOpen, setPrizeOpen] = useState(false);
-  const openPrize = useCallback(() => { closeScores(); setPrizeOpen(true); }, []);
+  const [claimFocused, setClaimFocused] = useState(false);
+  const claimButton = useRef<HTMLButtonElement>(null);
+  const openPrize = useCallback(() => {
+    closeScores();
+    claimButton.current?.focus({ preventScroll: true });
+    setPrizeOpen(true);
+  }, []);
   const closePrize = useCallback(() => setPrizeOpen(false), []);
-  useEffect(() => { if (screen !== 'board') setPrizeOpen(false); }, [screen]);
+  useEffect(() => {
+    if (screen !== 'board') { setPrizeOpen(false); setClaimFocused(false); }
+  }, [screen]);
   useEffect(() => {
     document.body.dataset.phone = String(phone.enabled);
     document.body.dataset.phoneGame = String(screen === 'game');
@@ -94,7 +102,7 @@ export default function App() {
                 {/* A suspended <Text> (e.g. a cold font load) only unmounts this boundary,
                     never the whole scene, so the TubeRenderer frame loop keeps running. */}
                 <Suspense fallback={null}>
-                  <ScreenRouter games={games} gameHost={<GameHost games={games} />} />
+                  <ScreenRouter games={games} gameHost={<GameHost games={games} />} onClaim={openPrize} claimFocused={claimFocused} />
                 </Suspense>
               </>
             ))}
@@ -102,10 +110,11 @@ export default function App() {
           {initial.autoSelect && !phone.enabled && <PerfAutoSelect />}
         </Canvas>
       )}
-      {(fallback || contextLost) && (!phone.enabled || screen === 'game') && <CssFallback games={games} />}
+      {(fallback || contextLost) && (!phone.enabled || screen === 'game') && <CssFallback games={games} onClaim={openPrize} />}
       {debug && <DebugPanel />}
       <Leaderboards />
-      {screen === 'board' && !phone.enabled && <PrizeButton onClick={openPrize} />}
+      {screen === 'board' && !phone.enabled && !fallback && !contextLost &&
+        <PrizeButton visuallyHidden buttonRef={claimButton} onFocusChange={setClaimFocused} onClick={openPrize} />}
       {screen === 'board' && prizeOpen && <PrizePortal onExit={closePrize} />}
       <AudioControls />
     </>
