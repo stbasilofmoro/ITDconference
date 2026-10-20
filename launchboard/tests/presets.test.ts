@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { PRESETS, PARAM_RANGES, paramsFor, median, pickPreset, scanlineCount } from '../src/tube/presets';
+import { PRESETS, PARAM_RANGES, paramsFor, median, pickInGamePreset, pickPreset, scanlineCount } from '../src/tube/presets';
 
 describe('presets', () => {
   it('standard disables bloom and persistence', () => {
@@ -35,6 +35,12 @@ describe('presets', () => {
     expect(pickPreset([25, 30, 22], 'pro')).toBe('standard');
     expect(pickPreset([25, 30, 22], 'standard')).toBe('safe');
     expect(pickPreset([25, 30, 22], 'safe')).toBe('safe');
+  });
+
+  it('mid-game only steps pro down to standard, never to the safe fallback', () => {
+    expect(pickInGamePreset([16, 17, 15], 'pro')).toBe('pro');
+    expect(pickInGamePreset([25, 30, 22], 'pro')).toBe('standard');
+    expect(pickInGamePreset([25, 30, 22], 'standard')).toBe('standard');
   });
 
   it('chooses a scanline count from canvas height', () => {

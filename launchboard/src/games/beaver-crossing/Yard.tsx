@@ -53,17 +53,20 @@ function HazardArt({ h, time, level }: { h: Hazard; time: number; level: number 
 function MovingHazards({ run }: { run: Run }) {
   const [frame, setFrame] = useState(0);
   const last = useRef(0);
+  const groups = useRef(new Map<string, Group>());
   useFrame(({ clock }) => {
+    // Slide every hazard each frame; the (costlier) re-render that animates their details stays at 30 Hz.
+    for (const h of hazardsAt(run.level, run.time)) { const g = groups.current.get(h.id); if (g) g.position.x = h.x - 4; }
     if (clock.elapsedTime - last.current > 1 / 30) { last.current = clock.elapsedTime; setFrame((f) => f + 1); }
   });
   void frame;
-  return <>{hazardsAt(run.level, run.time).filter((h) => !h.id.endsWith('-throwers')).map((h) => <group key={h.id} position={[h.x - 4, 0, 6 - h.row]}><HazardArt h={h} time={run.time} level={run.level} /></group>)}</>;
+  return <>{hazardsAt(run.level, run.time).filter((h) => !h.id.endsWith('-throwers')).map((h) => <group key={h.id} ref={(g) => { if (g) groups.current.set(h.id, g); else groups.current.delete(h.id); }} position={[h.x - 4, 0, 6 - h.row]}><HazardArt h={h} time={run.time} level={run.level} /></group>)}</>;
 }
 
 function Machinery({ run }: { run: Run }) {
   const [time, setTime] = useState(0);
   const last = useRef(0);
-  useFrame(({ clock }) => { if (clock.elapsedTime - last.current > 0.1) { last.current = clock.elapsedTime; setTime(run.time); } });
+  useFrame(({ clock }) => { if (clock.elapsedTime - last.current > 1 / 30) { last.current = clock.elapsedTime; setTime(run.time); } });
   const level = run.level;
   return <>
     {level === 0 && <>

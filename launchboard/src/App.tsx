@@ -80,7 +80,9 @@ export default function App() {
         <Canvas orthographic flat dpr={phone.enabled ? 1 : [1, 2]} camera={{ position: [0, 0, 1000], zoom: 1, near: 0.1, far: 5000 }}
           frameloop={phone.enabled && screen !== 'game' ? 'never' : 'always'}
           style={phone.enabled && screen !== 'game' ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}
-          gl={{ antialias: true, powerPreference: 'high-performance' }}
+          // The default framebuffer only ever draws the full-screen tube quad; scenes are
+          // antialiased in TubeRenderer's multisampled target, so MSAA here is pure fill cost.
+          gl={{ antialias: false, powerPreference: 'high-performance' }}
           onCreated={({ gl }) => {
             const canvas = gl.domElement;
             // A freshly created context is by definition not lost — clear any stale flag left

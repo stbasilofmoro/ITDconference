@@ -83,6 +83,12 @@ export function pickPreset(frameTimesMs: number[], current: QualityPreset): Qual
   return median(frameTimesMs) > 20 ? STEP_DOWN[current] : current;
 }
 
+/** Mid-game step-down: only pro -> standard. 'safe' swaps the Canvas for the CSS fallback,
+ * which would unmount the game being played. */
+export function pickInGamePreset(frameTimesMs: number[], current: QualityPreset): QualityPreset {
+  return current === 'pro' ? pickPreset(frameTimesMs, current) : current;
+}
+
 export function scanlineCount(canvasHeightPx: number): number {
   return Math.min(540, Math.max(120, Math.floor(canvasHeightPx / 3)));
 }

@@ -3,12 +3,13 @@ import { phoneGameBlocked } from '../../phone/viewport';
 import { PhoneButton, PhonePanel, PhonePortal, phoneInput } from '../../phone/PhonePortal';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
-import { Line, RoundedBox, Text } from '@react-three/drei';
+import { RoundedBox, Text } from '@react-three/drei';
 import { Plane, Vector3 } from 'three';
 import { fonts } from '../../brand';
 import { appStore } from '../../state/store';
 import type { GameContext } from '../types';
 import { KilnScene } from './KilnScene';
+import { StableLine } from '../../ui/StableLine';
 import { ScoreButton } from '../../leaderboard/ScoreButton';
 import { scoreStore } from '../../leaderboard/scores';
 import { addPiece, clamp, CONDITIONS, GRACE_SECONDS, newRun, RUN_SECONDS, SAFE_MAX, SAFE_MIN, setFeed, start, tick, togglePause, warning, type Run } from './engine';
@@ -50,7 +51,7 @@ function TemperatureGraph({ run }: { run: Run }) {
       <Label x={-295} y={mapY(t) + 12} size={23} width={80}>{String(t)}</Label>
     </group>)}
     <Label x={-290} y={top + 28} size={23}>{'\u00b0C'}</Label>
-    <Line points={points} color={outside ? '#A13254' : '#73385E'} lineWidth={3.5} />
+    <StableLine points={points} color={outside ? '#A13254' : '#73385E'} lineWidth={3.5} />
     <mesh position={[mapX(run.elapsed), mapY(run.temperature), 530]}><circleGeometry args={[6, 16]} /><meshBasicMaterial color={outside ? '#A13254' : '#73385E'} toneMapped={false} /></mesh>
     {[0, 10, 20, 30].map((second) => <Label key={second} x={x0 + second / 30 * (x1 - x0)} y={bottom - 13} size={20} width={90} center>{`${Math.round(startTime + second)}s`}</Label>)}
   </>;

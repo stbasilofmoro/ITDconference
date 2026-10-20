@@ -1,7 +1,7 @@
 import { usePhone, usePortraitPhone } from '../../phone/viewport';
-import { useMemo, useRef } from 'react';
+import { memo, useMemo, useRef } from 'react';
 import { createPortal, useFrame, useThree } from '@react-three/fiber';
-import { Billboard, Line, Text, useFBO } from '@react-three/drei';
+import { Billboard, Text, useFBO } from '@react-three/drei';
 import { BoxGeometry, Color, DoubleSide, Fog, MeshBasicMaterial, PerspectiveCamera, Scene, Vector3, type Group } from 'three';
 import { ScannerModel } from '../../illustrations/BadgeScanner';
 import { fonts } from '../../brand';
@@ -9,11 +9,13 @@ import { BOOTHS, type Person, type Run } from './engine';
 import { ATTENDEE_NAMES, COMPANIES } from './companies';
 import { Booth, Outlines, TBox, TCyl } from './Booth';
 import { companyTexture, decorTexture, INK } from './logos';
+import { StableLine } from '../../ui/StableLine';
 
 const BRAND_STRIPES = ['#ED9833', '#EE6BD2', '#18BE78'];
 const BANNERS = [[21.5, '#ED9833'], [12.5, '#EE6BD2'], [3.5, '#18BE78'], [-5.5, '#ED9833'], [-14.5, '#EE6BD2']] as const;
 const LAMP = new BoxGeometry(1.6, 0.06, 0.4);
 const LAMP_MAT = new MeshBasicMaterial({ color: '#FFE7BF', toneMapped: false });
+const LANYARD: [number, number, number][] = [[-0.18, 1.5, 0.23], [0, 1.16, 0.25], [0.18, 1.5, 0.23]];
 
 function Attendee({ person: p, time }: { person: Person; time: number }) {
   const body = p.scanned ? '#18BE78' : ['#3E4C6E', '#7A5E4F', '#55705C', '#6B4D63', '#5A6170', '#8A7A5A'][p.id % 6];
@@ -29,17 +31,15 @@ function Attendee({ person: p, time }: { person: Person; time: number }) {
     <TBox at={[0, 2.08, -0.02]} size={[0.5, 0.14, 0.44]} outline color={p.scanned ? '#238451' : ['#584436', '#514345', '#B8A393'][p.id % 3]} />
     {[-0.1, 0.1].map((x) => <TBox key={x} at={[x, 1.86, 0.207]} size={[0.035, 0.043, 0.022]} color="#322C35" />)}
     <TBox at={[0, 1.7, 0.207]} size={[p.windup > 0 ? 0.18 : 0.1, p.windup > 0 ? 0.13 : 0.028, 0.02]} color={p.windup > 0 ? '#756A35' : '#6F4F49'} />
-    <Line points={[[-0.18, 1.5, 0.23], [0, 1.16, 0.25], [0.18, 1.5, 0.23]]} color="#EEE4D2" lineWidth={2} />
+    <StableLine points={LANYARD} color="#EEE4D2" lineWidth={2} />
     <mesh position={[0, 1.15, 0.255]}><planeGeometry args={[0.34, 0.46]} /><meshBasicMaterial map={companyTexture(p.company, 'badge')} toneMapped={false} /></mesh>
     <mesh position={[0, 0.014, 0]} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.52, 0.58, 20]} /><meshBasicMaterial color={p.scanned ? '#18BE78' : p.windup > 0 ? '#C7B746' : '#9A919D'} /></mesh>
     {p.windup > 0 && <Billboard position={[0, 2.6 + Math.sin(time * 8) * 0.03, 0]}><Text font={fonts.semibold} fontSize={0.25} color="#F3E86D" outlineColor="#494132" outlineWidth={0.012}>BAD BREATH!</Text></Billboard>}
     {p.scanned && <Billboard position={[0, 2.65, 0]}><Text font={fonts.semibold} fontSize={0.2} color="#D8FFDE" outlineColor="#285139" outlineWidth={0.01} maxWidth={3} textAlign="center">{`${ATTENDEE_NAMES[p.id]} / ${COMPANIES[p.company].name}`}</Text></Billboard>}
   </group>;
 }
-function World({ run, camera, portrait }: { run: Run; camera: PerspectiveCamera; portrait: boolean }) {
-  const gun = useRef<Group>(null!);
-  useFrame(() => { if (gun.current) gun.current.position.y = -0.36 + (run.phase === 'playing' && !run.paused ? Math.sin(run.elapsed * 3) * 0.004 : 0) - run.beamTime * 0.08; });
-  const beamStart = camera.localToWorld(new Vector3(0.34, -0.25, -0.9));
+/** Walls, floor, lamps and banners never change, so they skip the hall's 30 Hz re-render. */
+const HallShell = memo(function HallShell() {
   return <>
     <hemisphereLight args={['#FFF4E6', '#5A5266', 2.4]} /><directionalLight position={[8, 16, 10]} intensity={1.5} color="#FFE9CC" />
     <TBox at={[0, -0.15, 1.5]} size={[38, 0.3, 55]} color="#CBC2B6" />
@@ -60,10 +60,18 @@ function World({ run, camera, portrait }: { run: Run; camera: PerspectiveCamera;
       <mesh position={[0, 6.1, 0]}><planeGeometry args={[1.3, 2.85]} /><meshBasicMaterial map={decorTexture('banner', color)} side={DoubleSide} toneMapped={false} /></mesh>
       <TCyl at={[0, 7.6, 0]} radius={0.04} length={1.6} color={INK} rotation={[0, 0, Math.PI / 2]} />
     </group>)}
+  </>;
+});
+function World({ run, camera, portrait }: { run: Run; camera: PerspectiveCamera; portrait: boolean }) {
+  const gun = useRef<Group>(null!);
+  useFrame(() => { if (gun.current) gun.current.position.y = -0.36 + (run.phase === 'playing' && !run.paused ? Math.sin(run.elapsed * 3) * 0.004 : 0) - run.beamTime * 0.08; });
+  const beamStart = camera.localToWorld(new Vector3(0.34, -0.25, -0.9));
+  return <>
+    <HallShell />
     {BOOTHS.map((b) => <group key={b.id} position={[b.x, 0, b.z]}><Booth company={run.boothCompanies[b.id]} number={101 + b.id} /></group>)}
     {run.people.map((person) => <Attendee key={person.id} person={person} time={run.elapsed} />)}
     {run.breath.map((b) => <group key={b.id} position={[b.x, 1.6, b.z]}>{[0, 1, 2, 3].map((i) => <mesh key={i} position={[Math.sin(i * 2.4) * b.age * 0.35, Math.cos(i * 2.4) * b.age * 0.3, 0]} scale={0.18 + b.age * 0.28}><sphereGeometry args={[1, 8, 6]} /><meshBasicMaterial color={i % 2 ? '#C9C272' : '#A4AA55'} transparent opacity={0.52} depthWrite={false} /></mesh>)}</group>)}
-    {run.beamTime > 0 && <Line points={[beamStart, new Vector3(...run.beamEnd)]} color="#67FFBC" lineWidth={3} />}
+    {run.beamTime > 0 && <StableLine points={[beamStart, run.beamEnd]} color="#67FFBC" lineWidth={3} />}
     <primitive object={camera}><group ref={gun} position={[portrait ? 0.16 : 0.36, -0.36, -0.64]} rotation={[0.04, -0.15, -0.08]} scale={0.75}><ScannerModel scanning={run.beamTime > 0} /><TBox at={[0, -0.27, 0.25]} size={[0.19, 0.19, 0.28]} color="#BA9377" /></group></primitive>
   </>;
 }

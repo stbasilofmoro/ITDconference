@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react';
+import { memo, useRef, type ReactNode } from 'react';
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import type { Group } from 'three';
@@ -182,7 +182,7 @@ function WorkingBeaver({ run }: { run: Run }) {
   </group>;
 }
 
-function PlantActivity() {
+const PlantActivity = memo(function PlantActivity() {
   const forklift = useRef<Group>(null!), chips = useRef<Group>(null!), crew = useRef<Group>(null!), steam = useRef<Group>(null!);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
@@ -217,9 +217,9 @@ function PlantActivity() {
     {[-7.6, -6.6].flatMap((x) => [-6.7, -5.65].map((z) => <group key={`${x}/${z}`} position={[x, 0.08, z]} scale={0.8}><CarbonBag /></group>))}
     <Text font={fonts.semibold} fontSize={0.19} letterSpacing={0.12} color="#616F63" position={[-6.95, 0.12, -7.7]} rotation={[-Math.PI / 2, 0, 0]}>BIOCARBON OUT</Text>
   </>;
-}
+});
 
-function YardFloor() {
+const YardFloor = memo(function YardFloor() {
   return <>
     <Box at={[0, -0.23, -1]} size={[18.4, 0.45, 14.5]} color="#A4ADA1" round />
     <Box at={[0, 0, -0.25]} size={[17.9, 0.03, 12.4]} color="#BEC2B5" />
@@ -235,7 +235,7 @@ function YardFloor() {
     </group>))}
     <Text font={fonts.semibold} fontSize={0.24} letterSpacing={0.16} color="#6E7D6C" position={[0, 0.06, 5.9]} rotation={[-Math.PI / 2, 0, 0]}>RECLAIM  /  REUSE  /  RENEW</Text>
   </>;
-}
+});
 
 export function TieYard({ run, onStation }: { run: Run; onStation: (id: StationId) => void }) {
   return <group position={[0, -20, 0]} rotation={[TILT, 0, 0]} scale={70}>

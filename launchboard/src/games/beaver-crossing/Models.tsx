@@ -1,22 +1,36 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { RoundedBox } from '@react-three/drei';
-import type { Group } from 'three';
+import { BoxGeometry, CircleGeometry, CylinderGeometry, MeshBasicMaterial, MeshStandardMaterial, SphereGeometry, type Group } from 'three';
 
 type V3 = [number, number, number];
 export const INK = '#36333B', GREY = '#969699', LIGHT = '#C4C4C4', ORANGE = '#E89A45', PINK = '#EE6BD2', CARBON = '#2E2A36';
+// These primitives appear hundreds of times per scene, so they share unit geometry (sized with
+// `scale`) and one material per colour instead of allocating both for every mesh. Shared objects
+// are passed as props, so R3F never disposes them when a mesh unmounts.
+const UNIT_BOX = new BoxGeometry(1, 1, 1);
+const UNIT_CYLINDER = new CylinderGeometry(1, 1, 1, 12);
+const UNIT_SPHERE = new SphereGeometry(1, 12, 8);
+const SHADOW_DISC = new CircleGeometry(0.6, 16);
+const SHADOW_MAT = new MeshBasicMaterial({ color: '#242127', transparent: true, opacity: 0.12, depthWrite: false });
+const standardCache = new Map<string, MeshStandardMaterial>();
+export function standard(color: string, roughness = 1) {
+  const key = `${color}/${roughness}`;
+  let m = standardCache.get(key);
+  if (!m) { m = new MeshStandardMaterial({ color, roughness }); standardCache.set(key, m); }
+  return m;
+}
 export function Box({ at = [0, 0, 0], size = [1, 1, 1], color = GREY, rotation, round = false }: { at?: V3; size?: V3; color?: string; rotation?: V3; round?: boolean }) {
-  const mat = <meshStandardMaterial color={color} roughness={0.82} />;
-  return round ? <RoundedBox position={at} args={size} radius={0.07} smoothness={1} rotation={rotation}>{mat}</RoundedBox> : <mesh position={at} rotation={rotation}><boxGeometry args={size} />{mat}</mesh>;
+  return round ? <RoundedBox position={at} args={size} radius={0.07} smoothness={1} rotation={rotation} material={standard(color, 0.82)} /> : <mesh position={at} rotation={rotation} scale={size} geometry={UNIT_BOX} material={standard(color, 0.82)} />;
 }
 export function Cylinder({ at = [0, 0, 0], radius = 0.2, length = 1, color = GREY, rotation }: { at?: V3; radius?: number; length?: number; color?: string; rotation?: V3 }) {
-  return <mesh position={at} rotation={rotation}><cylinderGeometry args={[radius, radius, length, 12]} /><meshStandardMaterial color={color} roughness={0.8} /></mesh>;
+  return <mesh position={at} rotation={rotation} scale={[radius, length, radius]} geometry={UNIT_CYLINDER} material={standard(color, 0.8)} />;
 }
 function Ball({ at, size, color }: { at: V3; size: V3; color: string }) {
-  return <mesh position={at} scale={size}><sphereGeometry args={[1, 12, 8]} /><meshStandardMaterial color={color} roughness={0.9} /></mesh>;
+  return <mesh position={at} scale={size} geometry={UNIT_SPHERE} material={standard(color, 0.9)} />;
 }
 export function Shadow({ size = [1, 1] }: { size?: [number, number] }) {
-  return <mesh position={[-0.1, 0.035, 0.1]} rotation={[-Math.PI / 2, 0, 0]} scale={[size[0], size[1], 1]}><circleGeometry args={[0.6, 16]} /><meshBasicMaterial color="#242127" transparent opacity={0.12} depthWrite={false} /></mesh>;
+  return <mesh position={[-0.1, 0.035, 0.1]} rotation={[-Math.PI / 2, 0, 0]} scale={[size[0], size[1], 1]} geometry={SHADOW_DISC} material={SHADOW_MAT} />;
 }
 export function Beaver({ celebrate = false }: { celebrate?: boolean }) {
   const arms = useRef<Group>(null!);

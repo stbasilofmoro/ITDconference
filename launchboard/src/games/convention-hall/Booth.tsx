@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useRef } from 'react';
+import { createContext, memo, useContext, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { AdditiveBlending, BackSide, BoxGeometry, CylinderGeometry, DataTexture, DoubleSide, MeshBasicMaterial, MeshToonMaterial, NearestFilter, RedFormat, RepeatWrapping, type Group, type Texture } from 'three';
 import { CarbonBag } from '../beaver-crossing/Models';
@@ -102,8 +102,9 @@ function CurvedWall({ company }: { company: number }) {
   </>;
 }
 
-/** One exhibitor booth, 5.2 × 3.8 m, back wall toward -z. Its shape comes from the company's `booth` kind. */
-export function Booth({ company, number }: { company: number; number: number }) {
+/** One exhibitor booth, 5.2 × 3.8 m, back wall toward -z. Its shape comes from the company's `booth` kind.
+ * Memoized: the hall re-renders 30×/s but a booth only changes with its props. */
+export const Booth = memo(function Booth({ company, number }: { company: number; number: number }) {
   const c = COMPANIES[company], color = c.color, kind = c.booth;
   const fascia = companyTexture(company, 'fascia', number);
   return <group>
@@ -137,4 +138,4 @@ export function Booth({ company, number }: { company: number; number: number }) 
     {kind === 'canopy' && <Canopy color={color} />}
     {kind === 'ring' && <HangingSign company={company} number={number} />}
   </group>;
-}
+});
